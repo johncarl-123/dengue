@@ -1,0 +1,24 @@
+{
+    "age": 23,
+    "gender": "male",
+    "municipality": "Inabanga",
+    "fever": 1,
+    "hypertension": 1,
+    "allergy": 1,
+    "colds": 1,
+    "uti": 1,
+    "chestPain": 1,
+    "asthma": 1,
+    "suka": 1,
+    "headache": 1,
+    "cough": 1,
+    "soreThroat": 1,
+    "nausea": 1,
+    "backPain": 1,
+    "jointPain": 1,
+    "noseBleed": 1,
+    "wateryStool": 1,
+    "preOrbitalPain": 1,
+    "bodyMalaise": 1
+  }
+  

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Aedes Aegypti
+* source:	https://sketchfab.com/3d-models/aedes-aegypti-a5c175f6c208415cb704033afcf5cb4c
+* author:	fabio.brooks (https://sketchfab.com/fabio.brooks)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Aedes Aegypti" (https://sketchfab.com/3d-models/aedes-aegypti-a5c175f6c208415cb704033afcf5cb4c) by fabio.brooks (https://sketchfab.com/fabio.brooks) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
