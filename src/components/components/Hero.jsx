@@ -19,15 +19,15 @@ const Hero = () => {
         <div className="flex flex-col items-start">
           <h1 className={`${styles.heroHeadText}`}>
             PREDICTIVE MODELING <br />
-            FOR DENGUE DISEASE:<br />
-            <span className="text-[#915EFF]">
-              <span className="text-5xl sm:text-4xl">
-                ANTICIPATING PATIENT <br />
-                OUTCOMES COMMON THROUGH <br />
-                SYMPTOMS ASSESSMENT
-              </span>
-            </span>
+            FOR DENGUE DISEASE:
           </h1>
+          <h2
+            className={`text-[#915EFF] text-2xl sm:text-3xl lg:text-4xl leading-snug`}
+          >
+            ANTICIPATING PATIENT <br />
+            OUTCOMES COMMON THROUGH <br />
+            SYMPTOMS ASSESSMENT
+          </h2><br />
           <p
             className={`${styles.heroSubText} mt-2 text-white-100 text-sm sm:text-base`}
           >
@@ -39,8 +39,8 @@ const Hero = () => {
 
       {/* Align the ComputersCanvas with larger viewing area */}
       <div
-        className="absolute inset-y-0 right-0 w-2/3 h-[90%] flex justify-end items-center z-0"
-        style={{ transform: "translateX(-1%) translateY(-10%)" }}
+        className="absolute inset-y-0 right-0 w-full h-[50%] sm:h-[70%] lg:h-[90%] flex justify-center lg:justify-end items-center z-0"
+        style={{ transform: "translateX(15%)" }}
       >
         <ComputersCanvas />
       </div>
