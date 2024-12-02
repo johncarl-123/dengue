@@ -61,7 +61,7 @@ app.post('/predict', async (req, res) => {
   console.log('Received data:', req.body);
 
   const pythonArgs = [
-    'svm_model3.pkl',
+    'svm_model4.pkl',
     age || 0,
     gender.toLowerCase() === 'male' ? '1' : '0',
     municipality || 'unknown',
