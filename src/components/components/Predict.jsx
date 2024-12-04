@@ -53,10 +53,10 @@ const Predict = () => {
   };
 
   const municipalities = [
-    { value: "inabanga", label: "Inabanga" },
-    { value: "clarin", label: "Clarin" },
-    { value: "san_isidro", label: "San Isidro" },
-    { value: "tubigon", label: "Tubigon" },
+    { value: "Inabanga", label: "Inabanga" },
+    { value: "Clarin", label: "Clarin" },
+    { value: "San Isidro", label: "San Isidro" },
+    { value: "Tubigon", label: "Tubigon" },
   ];
 
   const handleChange = (e) => {
