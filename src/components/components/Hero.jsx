@@ -5,7 +5,7 @@ import { ComputersCanvas } from "./canvas";
 
 const Hero = () => {
   return (
-    <section className={`relative w-full h-screen mx-auto flex pb-20 lg:pb-32`}>
+    <section className="relative w-full h-screen mx-auto pb-20 lg:pb-32 overflow-hidden">
       {/* Content area (Text) */}
       <div
         className={`absolute inset-0 top-[120px] max-w-7xl mx-auto ${styles.paddingX} flex flex-row items-start gap-5 z-10`}
@@ -19,15 +19,16 @@ const Hero = () => {
         <div className="flex flex-col items-start">
           <h1 className={`${styles.heroHeadText}`}>
             PREDICTIVE MODELING <br />
-            FOR DENGUE DISEASE:<br />
-            <span className="text-[#915EFF]">
-              <span className="text-5xl sm:text-4xl">
-                ANTICIPATING PATIENT <br />
-                OUTCOMES COMMON THROUGH <br />
-                SYMPTOMS ASSESSMENT
-              </span>
-            </span>
+            FOR DENGUE DISEASE:
           </h1>
+          <h2
+            className="text-[#915EFF] text-2xl sm:text-3xl lg:text-4xl leading-snug"
+          >
+            ANTICIPATING PATIENT <br />
+            OUTCOMES COMMON THROUGH <br />
+            SYMPTOMS ASSESSMENT
+          </h2>
+          <br />
           <p
             className={`${styles.heroSubText} mt-2 text-white-100 text-sm sm:text-base`}
           >
@@ -37,16 +38,15 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Align the ComputersCanvas with larger viewing area */}
+      {/* Align the ComputersCanvas */}
       <div
-        className="absolute inset-y-0 right-0 w-2/3 h-[90%] flex justify-end items-center z-0"
-        style={{ transform: "translateX(-1%) translateY(-10%)" }}
+        className="absolute inset-y-0 right-0 w-[90%] sm:w-[75%] lg:w-[60%] h-[50%] sm:h-[70%] lg:h-[90%] flex justify-center lg:justify-end items-center z-0"
+        style={{ transform: "translateX(10%)" }}
       >
         <ComputersCanvas />
       </div>
 
-      {/* Scroll indicator at the bottom */}
-      <div className="absolute xs:bottom-5 bottom-32 w-full flex justify-center items-center z-10">
+      <div className="absolute xs:bottom-5 bottom-20 w-full flex justify-center items-center z-10">
         <a href="#about">
           <div className="w-[35px] h-[64px] rounded-3xl border-4 border-secondary flex justify-center items-start p-2">
             <motion.div
@@ -63,6 +63,7 @@ const Hero = () => {
           </div>
         </a>
       </div>
+
     </section>
   );
 };
