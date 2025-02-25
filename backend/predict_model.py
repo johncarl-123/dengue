@@ -11,13 +11,16 @@ def parse_binary(value):
     return int(value)
 
 try:
-    # Parse input parameters (age, gender, and municipality are parsed but ignored)
-    age = float(sys.argv[2])                   # Age (ignored in prediction)
-    gender = int(sys.argv[3])                  # Gender (ignored in prediction)
-    municipality = sys.argv[4]                 # Municipality (ignored in prediction)
+    # Parse input parameters
+    age = float(sys.argv[2])
+    gender = int(sys.argv[3])
+    municipality = sys.argv[4]
+    year = sys.argv[5]  # Capture year
+    barangay = sys.argv[6] # Capture barangay
 
     # Parse the 16 binary symptoms from the command line arguments
-    symptoms = [parse_binary(arg) for arg in sys.argv[5:21]]
+    symptoms = [parse_binary(arg) for arg in sys.argv[7:23]] # Adjusted the slicing for the 16 symptoms
+
 
     # Only use the symptoms for prediction
     features = np.array(symptoms).reshape(1, -1)

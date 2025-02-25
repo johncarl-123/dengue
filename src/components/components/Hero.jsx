@@ -18,7 +18,7 @@ const Hero = () => {
         {/* Align content to the left */}
         <div className="flex flex-col items-start">
           <h1 className={`${styles.heroHeadText}`}>
-            PREDICTIVE MODELING <br />
+            DIAGNOSTIC SYSTEM <br />
             FOR DENGUE DISEASE:
           </h1>
           <h2
