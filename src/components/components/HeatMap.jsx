@@ -2,7 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Circle, Tooltip, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import Navbar from './Navbar';
-import { db, collection, getDocs } from "./firebaseConfig";
+import { db, firebaseConfig } from "./firebaseConfig"; // Importing db and firebaseConfig together
+import { collection, getDocs } from "firebase/firestore"; // Import Firestore methods
+
+// Log Firebase Config
+console.log("Firebase Configuration: ", firebaseConfig);
+console.log(import.meta.env.VITE_FIREBASE_API_KEY);
+console.log(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN);
+console.log(import.meta.env.VITE_FIREBASE_PROJECT_ID);
+console.log(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET);
+console.log(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID);
+console.log(import.meta.env.VITE_FIREBASE_APP_ID);
+
 
 // Helper component for map interaction and data fetching
 function MapInteraction({ selectedMunicipality, selectedYear, setBarangayData }) {
