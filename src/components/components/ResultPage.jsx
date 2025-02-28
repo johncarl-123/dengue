@@ -4,7 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Preload, useGLTF } from "@react-three/drei";
 import CanvasLoader from "./Loader";
 
-const Computers = ({ isMobile, isTablet, isDesktop }) => {
+const Computers = ({ isMobile, isTablet }) => {
   const computer = useGLTF("/public/doctor/scene.gltf");
 
   return (
@@ -24,7 +24,7 @@ const Computers = ({ isMobile, isTablet, isDesktop }) => {
       <primitive
         object={computer.scene}
         scale={isMobile ? 1.5 : isTablet ? 2 : 2.5}
-        position={isMobile ? [0, 3, 0] : isTablet ? [0, 3, 0] : [0, 3, 0]}
+        position={[0, 3, 0]}
         rotation={[0, 0, 0]}
       />
     </mesh>
@@ -34,14 +34,12 @@ const Computers = ({ isMobile, isTablet, isDesktop }) => {
 const ComputersCanvas = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(true);
 
   useEffect(() => {
     const checkSize = () => {
       const width = window.innerWidth;
       setIsMobile(width <= 500);
       setIsTablet(width > 500 && width <= 1024);
-      setIsDesktop(width > 1024);
     };
 
     checkSize();
@@ -67,7 +65,7 @@ const ComputersCanvas = () => {
           maxPolarAngle={Math.PI / 2}
           minPolarAngle={Math.PI / 2}
         />
-        <Computers />
+        <Computers isMobile={isMobile} isTablet={isTablet} />
       </Suspense>
       <Preload all />
     </Canvas>
@@ -78,18 +76,23 @@ const ResultPage = () => {
   const location = useLocation();
   const prediction = location.state?.prediction ?? 0;
 
-  const predictionValue = parseFloat(prediction);
+  let predictionValue = parseFloat(prediction);
+
+  // ✅ Fix: Normalize prediction percentage
+  if (predictionValue > 100) {
+    predictionValue /= 100;
+  }
+  const formattedPrediction = predictionValue.toFixed(2); // Ensure two decimal places
+
+  // Determine result status
+  const resultStatus = predictionValue >= 50 ? "Positive" : "Negative";
+
   let recommendation;
   let recommendationsPool = [];
 
-  const resultStatus = predictionValue >= 50 ? "Positive" : "Negative";
-  <p className="text-2xl mb-4">{`Result: ${resultStatus}`}</p>
-
-  
-
   if (predictionValue >= 50) {
     recommendation =
-      "The likelihood of dengue is high. Please consult with a doctor or healthcare professional promptly for follow-up testing. Early detection can help ensure appropriate care.";
+      "The likelihood of dengue is high. Please consult with a doctor or healthcare professional promptly for follow-up testing.";
     recommendationsPool = [
       "Immediate consultation with a doctor can prevent complications and ensure proper treatment.",
       "Only healthcare professionals can provide the necessary diagnostic tests to confirm or rule out dengue.",
@@ -101,8 +104,8 @@ const ResultPage = () => {
       "The likelihood of dengue is low. Maintain good health practices and monitor for any changes, but there is no immediate cause for concern.";
     recommendationsPool = [
       "Continue to use mosquito repellents and keep your environment clean to prevent mosquito breeding.",
-      "For your home, make sure all windows have screens and fix it if there are holes. Installing window screens is a simple and effective way to keep mosquitoes out of your living spaces.",
-      "Always wear mosquito repellents, long-sleeved shirts, pants, or garments that could cover your skin.",
+      "Make sure all windows have screens and fix them if there are holes.",
+      "Always wear mosquito repellents, long-sleeved shirts, or pants to reduce exposure.",
       "If symptoms like fever or joint pain develop, consult a healthcare provider for further evaluation.",
     ];
   }
@@ -116,7 +119,7 @@ const ResultPage = () => {
         {/* Text Section */}
         <div className="text-center md:text-left p-10 flex-1">
           <h1 className="text-4xl font-bold mb-4">Dengue Prediction Result</h1>
-          <p className="text-2xl mb-4">{`Prediction: ${predictionValue}%`}</p>
+          <p className="text-2xl mb-4">{`Prediction: ${formattedPrediction}%`}</p>
           <p className="text-2xl mb-4">{`Result: ${resultStatus}`}</p>
           <p className="text-lg mb-4">
             {recommendation}
