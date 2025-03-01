@@ -13,9 +13,9 @@ const __dirname = path.dirname(__filename);
 
 // Initialize Express
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000; // Dynamic port for deployment
 
-app.use(cors());
+app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' })); // Adjust allowed origins for security
 app.use(bodyParser.json());
 
 // Initialize Firebase
@@ -25,18 +25,18 @@ async function initializeFirebase() {
             throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set.");
         }
 
-        // Directly parse the JSON string from the environment variable
+        // Parse Firebase service account from environment variable
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
         // Initialize Firebase with credentials
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
-            projectId: serviceAccount.project_id, // Explicitly setting projectId
+            projectId: serviceAccount.project_id,
         });
 
-        console.log('Firebase initialized successfully!');
+        console.log('✅ Firebase initialized successfully!');
     } catch (err) {
-        console.error('Failed to initialize Firebase:', err);
+        console.error('❌ Failed to initialize Firebase:', err);
         process.exit(1);
     }
 }
@@ -47,72 +47,72 @@ initializeFirebase().then(() => {
 
     // Prediction endpoint
     app.post('/predict', async (req, res) => {
-        let {
-            age = 0,
-            gender = 'unknown',
-            municipality = 'unknown',
-            year = 'unknown',
-            barangay = 'unknown',
-            fever = 0,
-            allergy = 0,
-            colds = 0,
-            chestPain = 0,
-            suka = 0,
-            headache = 0,
-            cough = 0,
-            stomachache = 0,
-            soreThroat = 0,
-            nausea = 0,
-            backPain = 0,
-            jointPain = 0,
-            noseBleed = 0,
-            wateryStool = 0,
-            preOrbitalPain = 0,
-            bodyMalaise = 0,
-        } = req.body;
-
-        console.log('Received request body:', req.body);
-
-        // Validate year format
-        if (year !== 'unknown' && !/^\d{4}$/.test(year)) {
-            console.warn("Invalid year format. Using default.");
-            year = 'unknown';
-        }
-
-        // Prepare arguments for Python script
-        const pythonArgs = [
-            'svm_model4.pkl',
-            age || 0,
-            gender.toLowerCase() === 'male' ? '1' : '0',
-            municipality || 'unknown',
-            year || 'unknown',
-            barangay || 'unknown',
-            fever,
-            allergy,
-            colds,
-            chestPain,
-            suka,
-            headache,
-            cough,
-            stomachache,
-            soreThroat,
-            nausea,
-            backPain,
-            jointPain,
-            noseBleed,
-            wateryStool,
-            preOrbitalPain,
-            bodyMalaise,
-        ].map(String);
-
-        const options = {
-            mode: 'text',
-            pythonOptions: ['-u'],
-            scriptPath: __dirname,
-            args: pythonArgs,
-        };
-
         try {
+            console.log('📥 Received request:', req.body);
+
+            let {
+                age = 0,
+                gender = 'unknown',
+                municipality = 'unknown',
+                year = 'unknown',
+                barangay = 'unknown',
+                fever = 0,
+                allergy = 0,
+                colds = 0,
+                chestPain = 0,
+                suka = 0,
+                headache = 0,
+                cough = 0,
+                stomachache = 0,
+                soreThroat = 0,
+                nausea = 0,
+                backPain = 0,
+                jointPain = 0,
+                noseBleed = 0,
+                wateryStool = 0,
+                preOrbitalPain = 0,
+                bodyMalaise = 0,
+            } = req.body;
+
+            // Validate year format
+            if (year !== 'unknown' && !/^\d{4}$/.test(year)) {
+                console.warn("⚠️ Invalid year format. Using default.");
+                year = 'unknown';
+            }
+
+            // Prepare arguments for Python script
+            const pythonArgs = [
+                'svm_model4.pkl',
+                age || 0,
+                gender.toLowerCase() === 'male' ? '1' : '0',
+                municipality || 'unknown',
+                year || 'unknown',
+                barangay || 'unknown',
+                fever,
+                allergy,
+                colds,
+                chestPain,
+                suka,
+                headache,
+                cough,
+                stomachache,
+                soreThroat,
+                nausea,
+                backPain,
+                jointPain,
+                noseBleed,
+                wateryStool,
+                preOrbitalPain,
+                bodyMalaise,
+            ].map(String);
+
+            const options = {
+                mode: 'text',
+                pythonOptions: ['-u'],
+                scriptPath: __dirname,
+                args: pythonArgs,
+            };
+
             const results = await new Promise((resolve, reject) => {
                 PythonShell.run('predict_model.py', options, (err, result) => {
                     if (err) reject(err);
@@ -125,11 +125,11 @@ initializeFirebase().then(() => {
                 try {
                     prediction = parseFloat(results[0].match(/[\d.]+/)?.[0] || null);
                 } catch (parseError) {
-                    console.error("Error parsing prediction:", parseError, "Raw result:", results[0]);
+                    console.error("🚨 Error parsing prediction:", parseError, "Raw result:", results[0]);
                 }
             }
 
-            console.log("Prediction probability:", prediction);
+            console.log("🔮 Prediction probability:", prediction);
 
             // Save to Firestore only if prediction is positive
             if (prediction !== null && prediction > 0.5) {
@@ -159,15 +159,14 @@ initializeFirebase().then(() => {
                 };
 
                 await db.collection('predict').add(predictionData);
-                console.log("Positive case added to Firestore.");
+                console.log("✅ Positive case added to Firestore.");
             } else {
-                console.log("Prediction is not positive. Not saving to Firestore.");
+                console.log("ℹ️ Prediction is not positive. Not saving to Firestore.");
             }
 
-            // Respond with prediction
             res.json({ prediction: prediction !== null ? `${(prediction * 100).toFixed(2)}%` : 'N/A' });
         } catch (error) {
-            console.error("Error during prediction:", error);
+            console.error("🚨 Error during prediction:", error);
             res.status(500).json({ error: "Prediction failed" });
         }
     });
@@ -186,14 +185,16 @@ initializeFirebase().then(() => {
 
             res.json(heatmapData);
         } catch (error) {
-            console.error("Error fetching heatmap data:", error);
+            console.error("🚨 Error fetching heatmap data:", error);
             res.status(500).json({ error: "Failed to retrieve heatmap data" });
         }
     });
 
+    // Start the server
     app.listen(PORT, () => {
-        console.log(`Server is running on http://localhost:${PORT}`);
+        console.log(`🚀 Server running on port ${PORT}`);
     });
+
 }).catch(err => {
-    console.error('Error during Firebase initialization:', err);
+    console.error('❌ Error during Firebase initialization:', err);
 });
