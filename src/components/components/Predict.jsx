@@ -220,14 +220,14 @@ const Predict = () => {
     };
 
     axios
-      .post("https://dengue-xf79.onrender.com", data)
+      .post("https://dengue-g8ge.onrender.com/predict", data)
       .then((response) => {
         const prediction = response.data.prediction;
 
         const saveData = { ...data, prediction };
 
         axios
-          .post("https://dengue-xf79.onrender.com/save-prediction", saveData)
+          .post("https://dengue-g8ge.onrender.com/save-prediction", saveData)
           .then(() => {
             console.log("Prediction saved successfully");
           })
@@ -239,7 +239,7 @@ const Predict = () => {
         navigate("/result", { state: { prediction } });
       })
       .catch((error) => {
-        setLoading(false);
+        setLoading(false)
         console.error("Prediction error", error);
         alert("Error: Unable to make a prediction. Please try again.");
       });
