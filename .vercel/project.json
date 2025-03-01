@@ -1,15 +1,1 @@
-{
-  "projectId": "prj_Pvv4u1yjxLFiaSwSMpRDK9tYljlc",
-  "orgId": "team_72HSdVM1JBMOjxTK9fzMllr2",
-  "settings": {
-    "createdAt": 1740583647975,
-    "framework": "vite",
-    "devCommand": null,
-    "installCommand": "npm install",
-    "buildCommand": "npm run build",
-    "outputDirectory": "dist",
-    "rootDirectory": null,
-    "directoryListing": false,
-    "nodeVersion": "22.x"
-  }
-}
+{"projectId":"prj_DLwMbP5oQl9TE3jQ5ejTxY7Y4LMW","orgId":"team_72HSdVM1JBMOjxTK9fzMllr2"}

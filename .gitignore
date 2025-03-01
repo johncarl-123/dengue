@@ -29,3 +29,5 @@ backend/firebaseServiceAccountKey.json
 *.njsproj
 *.sln
 *.sw?
+
+.vercel

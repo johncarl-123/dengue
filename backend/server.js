@@ -22,7 +22,7 @@ app.use(bodyParser.json());
 // Initialize Firebase asynchronously
 async function initializeFirebase() {
     try {
-        const serviceAccountPath = path.join(__dirname, 'firebaseServiceAccountKey.json');
+        const serviceAccountPath = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
         const serviceAccount = JSON.parse(await readFile(serviceAccountPath, 'utf-8'));
         
         admin.initializeApp({
