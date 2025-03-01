@@ -6,7 +6,6 @@ import { PythonShell } from 'python-shell';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import admin from 'firebase-admin';
-import { readFile } from 'fs/promises';
 
 // Define directory and file paths
 const __filename = fileURLToPath(import.meta.url);
@@ -19,17 +18,22 @@ const PORT = 5000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Initialize Firebase asynchronously
+// Initialize Firebase
 async function initializeFirebase() {
     try {
-        const serviceAccountPath = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-        const serviceAccount = JSON.parse(await readFile(serviceAccountPath, 'utf-8'));
-        
+        if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+            throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set.");
+        }
+
+        // Directly parse the JSON string from the environment variable
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+        // Initialize Firebase with credentials
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
             projectId: serviceAccount.project_id, // Explicitly setting projectId
         });
-        
+
         console.log('Firebase initialized successfully!');
     } catch (err) {
         console.error('Failed to initialize Firebase:', err);
