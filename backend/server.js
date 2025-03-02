@@ -17,7 +17,7 @@ const __dirname = path.dirname(__filename);
 
 // Initialize Express
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
 // Middleware setup
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' }));
