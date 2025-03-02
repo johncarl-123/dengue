@@ -1,4 +1,4 @@
-// Import modules
+// Import required modules
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -6,51 +6,59 @@ import { PythonShell } from 'python-shell';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import admin from 'firebase-admin';
+import dotenv from 'dotenv';
+import fs from 'fs';
 
-// Define directory and file paths
+// Load environment variables from .env
+dotenv.config();
+
+// Define directory paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize Express
 const app = express();
-const PORT = process.env.PORT || 5000; // Dynamic port for deployment
+const PORT = process.env.PORT || 5000;
 
-app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' })); // Adjust allowed origins for security
+// Middleware setup
+app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' }));
 app.use(bodyParser.json());
 
-// Initialize Firebase
+// Firebase Initialization
 async function initializeFirebase() {
     try {
-        if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-            throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set.");
+        const credentialsPath = process.env.FIREBASE_CREDENTIALS_PATH;
+
+        if (!credentialsPath) {
+            throw new Error("FIREBASE_CREDENTIALS_PATH environment variable is missing.");
         }
 
-        // Parse Firebase service account from environment variable
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        // Read the Firebase credentials file
+        const serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
 
-        // Initialize Firebase with credentials
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-            projectId: serviceAccount.project_id,
-        });
-
-        console.log('✅ Firebase initialized successfully!');
+        if (!admin.apps.length) {
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+                projectId: serviceAccount.project_id,
+            });
+            console.log('✅ Firebase initialized successfully!');
+        }
     } catch (err) {
-        console.error('❌ Failed to initialize Firebase:', err);
+        console.error('❌ Firebase initialization failed:', err.message);
         process.exit(1);
     }
 }
 
-// Start the server after initializing Firebase
+// Start the server after Firebase initialization
 initializeFirebase().then(() => {
     const db = admin.firestore();
 
-    // Prediction endpoint
+    // Prediction API endpoint
     app.post('/predict', async (req, res) => {
         try {
-            console.log('📥 Received request:', req.body);
+            console.log('📥 Incoming request:', req.body);
 
-            let {
+            const {
                 age = 0,
                 gender = 'unknown',
                 municipality = 'unknown',
@@ -76,34 +84,20 @@ initializeFirebase().then(() => {
 
             // Validate year format
             if (year !== 'unknown' && !/^\d{4}$/.test(year)) {
-                console.warn("⚠️ Invalid year format. Using default.");
-                year = 'unknown';
+                console.warn("⚠️ Invalid year format. Using default value.");
             }
 
-            // Prepare arguments for Python script
+            // Prepare arguments for the Python script
             const pythonArgs = [
                 'svm_model4.pkl',
-                age || 0,
+                age,
                 gender.toLowerCase() === 'male' ? '1' : '0',
-                municipality || 'unknown',
-                year || 'unknown',
-                barangay || 'unknown',
-                fever,
-                allergy,
-                colds,
-                chestPain,
-                suka,
-                headache,
-                cough,
-                stomachache,
-                soreThroat,
-                nausea,
-                backPain,
-                jointPain,
-                noseBleed,
-                wateryStool,
-                preOrbitalPain,
-                bodyMalaise,
+                municipality,
+                year,
+                barangay,
+                fever, allergy, colds, chestPain, suka, headache, cough,
+                stomachache, soreThroat, nausea, backPain, jointPain,
+                noseBleed, wateryStool, preOrbitalPain, bodyMalaise
             ].map(String);
 
             const options = {
@@ -113,6 +107,7 @@ initializeFirebase().then(() => {
                 args: pythonArgs,
             };
 
+            // Run the Python script and get prediction results
             const results = await new Promise((resolve, reject) => {
                 PythonShell.run('predict_model.py', options, (err, result) => {
                     if (err) reject(err);
@@ -125,13 +120,13 @@ initializeFirebase().then(() => {
                 try {
                     prediction = parseFloat(results[0].match(/[\d.]+/)?.[0] || null);
                 } catch (parseError) {
-                    console.error("🚨 Error parsing prediction:", parseError, "Raw result:", results[0]);
+                    console.error("🚨 Error parsing prediction:", parseError);
                 }
             }
 
             console.log("🔮 Prediction probability:", prediction);
 
-            // Save to Firestore only if prediction is positive
+            // Save to Firestore only if prediction is significant
             if (prediction !== null && prediction > 0.5) {
                 const predictionData = {
                     age,
@@ -139,44 +134,32 @@ initializeFirebase().then(() => {
                     municipality,
                     year,
                     barangay,
-                    fever,
-                    allergy,
-                    colds,
-                    chestPain,
-                    suka,
-                    headache,
-                    cough,
-                    stomachache,
-                    soreThroat,
-                    nausea,
-                    backPain,
-                    jointPain,
-                    noseBleed,
-                    wateryStool,
-                    preOrbitalPain,
-                    bodyMalaise,
+                    fever, allergy, colds, chestPain, suka, headache, cough,
+                    stomachache, soreThroat, nausea, backPain, jointPain,
+                    noseBleed, wateryStool, preOrbitalPain, bodyMalaise,
                     target: prediction,
                 };
 
                 await db.collection('predict').add(predictionData);
                 console.log("✅ Positive case added to Firestore.");
             } else {
-                console.log("ℹ️ Prediction is not positive. Not saving to Firestore.");
+                console.log("ℹ️ Prediction is not high enough. Not saving.");
             }
 
             res.json({ prediction: prediction !== null ? `${(prediction * 100).toFixed(2)}%` : 'N/A' });
         } catch (error) {
-            console.error("🚨 Error during prediction:", error);
+            console.error("🚨 Error during prediction:", error.message);
             res.status(500).json({ error: "Prediction failed" });
         }
     });
 
-    // Heatmap data endpoint (fetches only positive cases)
+    // Heatmap Data API (Fetch positive cases)
     app.get('/heatmap-data', async (req, res) => {
         try {
             const snapshot = await db.collection('predict').where('target', '>', 0.5).get();
             const data = snapshot.docs.map(doc => doc.data());
 
+            // Count cases by municipality
             const heatmapData = data.reduce((acc, entry) => {
                 const { municipality } = entry;
                 acc[municipality] = (acc[municipality] || 0) + 1;
@@ -185,16 +168,16 @@ initializeFirebase().then(() => {
 
             res.json(heatmapData);
         } catch (error) {
-            console.error("🚨 Error fetching heatmap data:", error);
+            console.error("🚨 Error fetching heatmap data:", error.message);
             res.status(500).json({ error: "Failed to retrieve heatmap data" });
         }
     });
 
     // Start the server
     app.listen(PORT, () => {
-        console.log(`🚀 Server running on port ${PORT}`);
+        console.log(`🚀 Server is running on port ${PORT}`);
     });
 
 }).catch(err => {
-    console.error('❌ Error during Firebase initialization:', err);
+    console.error('❌ Error initializing Firebase:', err.message);
 });
