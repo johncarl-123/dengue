@@ -26,14 +26,16 @@ app.use(bodyParser.json());
 // Firebase Initialization (Using Environment Variable)
 async function initializeFirebase() {
     try {
-        const firebaseCredentials = process.env.FIREBASE_CREDENTIALS;
-
-        if (!firebaseCredentials) {
+        if (!process.env.FIREBASE_CREDENTIALS) {
             throw new Error("FIREBASE_CREDENTIALS environment variable is missing.");
         }
 
-        // Parse JSON credentials from environment variable
-        const serviceAccount = JSON.parse(firebaseCredentials);
+        // Parse JSON credentials safely
+        const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS || '{}');
+
+        if (!serviceAccount.project_id) {
+            throw new Error("Invalid Firebase credentials.");
+        }
 
         if (!admin.apps.length) {
             admin.initializeApp({
