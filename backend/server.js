@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 // Load environment variables from .env
 dotenv.config();
@@ -23,19 +24,17 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' }));
 app.use(bodyParser.json());
 
-// Firebase Initialization (Using Environment Variable)
+// Firebase Initialization
 async function initializeFirebase() {
     try {
-        if (!process.env.FIREBASE_CREDENTIALS) {
-            throw new Error("FIREBASE_CREDENTIALS environment variable is missing.");
+        const credentialsPath = process.env.FIREBASE_CREDENTIALS_PATH;
+
+        if (!credentialsPath) {
+            throw new Error("FIREBASE_CREDENTIALS_PATH environment variable is missing.");
         }
 
-        // Parse JSON credentials safely
-        const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS || '{}');
-
-        if (!serviceAccount.project_id) {
-            throw new Error("Invalid Firebase credentials.");
-        }
+        // Read the Firebase credentials file
+        const serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
 
         if (!admin.apps.length) {
             admin.initializeApp({

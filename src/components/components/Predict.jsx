@@ -239,7 +239,7 @@ const Predict = () => {
         navigate("/result", { state: { prediction } });
       })
       .catch((error) => {
-        setLoading(false)
+        setLoading(false);
         console.error("Prediction error", error);
         alert("Error: Unable to make a prediction. Please try again.");
       });
