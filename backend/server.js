@@ -27,14 +27,21 @@ app.use(bodyParser.json());
 // Firebase Initialization
 async function initializeFirebase() {
     try {
-        const credentialsPath = process.env.FIREBASE_CREDENTIALS_PATH;
+        let serviceAccount;
 
-        if (!credentialsPath) {
-            throw new Error("FIREBASE_CREDENTIALS_PATH environment variable is missing.");
+        if (process.env.FIREBASE_CREDENTIALS) {
+            // If credentials are stored as an environment variable (Render Deployment)
+            serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+        } else if (process.env.FIREBASE_CREDENTIALS_PATH) {
+            // If credentials are stored in a file (Local Development)
+            const credentialsPath = process.env.FIREBASE_CREDENTIALS_PATH;
+            if (!fs.existsSync(credentialsPath)) {
+                throw new Error(`Firebase credentials file not found at ${credentialsPath}`);
+            }
+            serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
+        } else {
+            throw new Error("Missing Firebase credentials. Set FIREBASE_CREDENTIALS or FIREBASE_CREDENTIALS_PATH.");
         }
-
-        // Read the Firebase credentials file
-        const serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
 
         if (!admin.apps.length) {
             admin.initializeApp({
