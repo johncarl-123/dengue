@@ -4,7 +4,7 @@ import * as tf from '@tensorflow/tfjs-node';
 
 
 // Load the model (ensure the path is correct)
-const modelPath = join(process.cwd(), 'backend', 'backend', 'rf_model.pkl');
+const modelPath = join(process.cwd(), 'backend', 'svm_model4.pkl');
 
 // Function to make a prediction
 export async function makePrediction(inputData) {
