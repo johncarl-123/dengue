@@ -16,6 +16,8 @@ dist-ssr
 .env.local
 *.local
 
+# Firebase Service Account (DO NOT COMMIT)
+backend/firebaseServiceAccountKey.json
 
 # IDE/editor directories and files
 .vscode/*
