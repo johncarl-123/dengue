@@ -21,7 +21,13 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Middleware setup
-app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' }));
+const allowedOrigins = process.env.ALLOWED_ORIGIN ? [process.env.ALLOWED_ORIGIN] : ['*'];
+app.use(cors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'OPTIONS'], // Specify the allowed methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+}));
 app.use(bodyParser.json());
 
 // Firebase Initialization
@@ -65,6 +71,7 @@ initializeFirebase().then(() => {
         try {
             console.log('📥 Incoming request:', req.body);
 
+            // Extract and validate request body parameters
             const {
                 age = 0,
                 gender = 'unknown',
@@ -122,6 +129,7 @@ initializeFirebase().then(() => {
                 });
             });
 
+            // Process prediction
             let prediction = null;
             if (results && results.length > 0) {
                 try {
