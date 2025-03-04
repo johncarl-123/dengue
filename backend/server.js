@@ -67,7 +67,7 @@ initializeFirebase().then(() => {
     const db = admin.firestore();
 
     // Prediction API endpoint
-    app.post('/predict', async (req, res) => {
+    app.post('https://dengue-g8ge.onrender.com/predict', async (req, res) => {
         try {
             console.log('📥 Incoming request:', req.body);
 
