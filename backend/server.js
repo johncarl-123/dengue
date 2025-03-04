@@ -21,7 +21,7 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Middleware setup
-const allowedOrigins = process.env.ALLOWED_ORIGIN ? [process.env.ALLOWED_ORIGIN] : ['*'];
+const allowedOrigins = process.env.ALLOWED_ORIGIN ? process.env.ALLOWED_ORIGIN.split(',') : ['*']; // Split multiple origins if there are multiple
 app.use(cors({
     origin: allowedOrigins,
     methods: ['GET', 'POST', 'OPTIONS'], // Specify the allowed methods
@@ -66,8 +66,13 @@ async function initializeFirebase() {
 initializeFirebase().then(() => {
     const db = admin.firestore();
 
+    // Root endpoint for the application
+    app.get('/', (req, res) => {
+        res.send('Welcome to the Dengue Prediction API. Use /predict to make a prediction.');
+    });
+
     // Prediction API endpoint
-    app.post('https://dengue-g8ge.onrender.com/predict', async (req, res) => {
+    app.post('/predict', async (req, res) => {
         try {
             console.log('📥 Incoming request:', req.body);
 
