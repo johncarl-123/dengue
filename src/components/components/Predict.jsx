@@ -222,7 +222,7 @@ const Predict = () => {
   
       // First API call - Prediction
       const response = await axios.post("https://dengue-production.up.railway.app/predict", data);
-      const prediction = response.data.prediction;
+      const { prediction, recommendation } = response.data;
   
       const saveData = { ...data, prediction };
   
@@ -235,11 +235,11 @@ const Predict = () => {
       }
   
       setLoading(false);
-      navigate("/result", { state: { prediction } });
+      navigate("/result", { state: { prediction, recommendation } });
   
     } catch (error) {
       setLoading(false);
-      
+  
       if (error.response) {
         console.error("Prediction error:", error.response.data);
         alert(`Error: ${error.response.data.message || "Unable to make a prediction. Please try again."}`);
@@ -252,6 +252,7 @@ const Predict = () => {
       }
     }
   };
+  
   
 
   return (

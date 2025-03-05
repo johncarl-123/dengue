@@ -14,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 const MODEL_PATH = process.env.MODEL_PATH || 'svm_model4.pkl';
 
 // 🔹 CORS Middleware (Updated)
@@ -77,7 +77,7 @@ initializeFirebase().then(() => {
 
     app.post('/predict', async (req, res) => {
         try {
-            console.log('📥 Incoming request:', req.body);
+            console.log('📥 Incoming request:', JSON.stringify(req.body, null, 2));
 
             let {
                 age = 0, gender = 'unknown', municipality = 'unknown', year = 'unknown',
@@ -107,6 +107,8 @@ initializeFirebase().then(() => {
                 args: pythonArgs,
             };
 
+            console.log("🔄 Running Python script with args:", pythonArgs);
+
             const results = await new Promise((resolve, reject) => {
                 PythonShell.run('predict_model.py', options, (err, result) => {
                     if (err) {
@@ -116,6 +118,8 @@ initializeFirebase().then(() => {
                     resolve(result);
                 });
             });
+
+            console.log("📜 Raw Python Output:", results);
 
             let prediction = null;
             if (results && results.length > 0) {
