@@ -17,12 +17,31 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MODEL_PATH = process.env.MODEL_PATH || 'svm_model4.pkl';
 
-// 🔹 CORS Middleware
+// 🔹 CORS Middleware (Updated)
 const allowedOrigins = ['http://localhost:5173', 'https://dengue-production.up.railway.app'];
-app.use(cors({ origin: allowedOrigins, credentials: true }));
-app.use(bodyParser.json());
 
-let db; // Firestore database instance
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Handle preflight requests
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.sendStatus(200);
+});
+
+app.use(bodyParser.json());
 
 // 🔹 Initialize Firebase
 async function initializeFirebase() {
@@ -40,7 +59,6 @@ async function initializeFirebase() {
             });
             console.log('✅ Firebase initialized successfully!');
         }
-        db = admin.firestore();
     } catch (err) {
         console.error('❌ Firebase initialization failed:', err.message);
         process.exit(1);
@@ -48,6 +66,8 @@ async function initializeFirebase() {
 }
 
 initializeFirebase().then(() => {
+    const db = admin.firestore();
+
     app.get('/', (req, res) => {
         res.send('Welcome to the Dengue Prediction API.');
     });
@@ -70,15 +90,11 @@ initializeFirebase().then(() => {
                 year = 'unknown';
             }
 
-            // Ensure Municipality Formatting
-            municipality = municipality.trim().toLowerCase();
-            barangay = barangay.trim().toLowerCase();
-
             const pythonArgs = [
                 MODEL_PATH, age, gender.toLowerCase() === 'male' ? '1' : '0',
-                municipality, year, barangay, fever, allergy, colds, chestPain, suka,
-                headache, cough, stomachache, soreThroat, nausea, backPain, jointPain,
-                noseBleed, wateryStool, preOrbitalPain, bodyMalaise
+                municipality.toLowerCase(), year, barangay.toLowerCase(), fever, allergy,
+                colds, chestPain, suka, headache, cough, stomachache, soreThroat,
+                nausea, backPain, jointPain, noseBleed, wateryStool, preOrbitalPain, bodyMalaise
             ].map(String);
 
             const options = {
@@ -100,8 +116,11 @@ initializeFirebase().then(() => {
 
             let prediction = null;
             if (results && results.length > 0) {
-                const match = results[0].match(/[\d.]+/);
-                prediction = match ? parseFloat(match[0]) : null;
+                try {
+                    prediction = parseFloat(results[0].match(/[\d.]+/)?.[0] || null);
+                } catch (parseError) {
+                    console.error("🚨 Error parsing prediction:", parseError);
+                }
             }
 
             console.log("🔮 Prediction probability:", prediction);
@@ -109,7 +128,7 @@ initializeFirebase().then(() => {
             if (prediction !== null && prediction > 0.5) {
                 const predictionData = {
                     age, gender: gender.toLowerCase() === 'male' ? 1 : 0,
-                    municipality, year, barangay,
+                    municipality: municipality.toLowerCase(), year, barangay: barangay.toLowerCase(),
                     fever, allergy, colds, chestPain, suka, headache, cough, stomachache,
                     soreThroat, nausea, backPain, jointPain, noseBleed, wateryStool,
                     preOrbitalPain, bodyMalaise, target: prediction,
@@ -131,18 +150,13 @@ initializeFirebase().then(() => {
     app.get('/heatmap-data', async (req, res) => {
         try {
             const snapshot = await db.collection('predict').where('target', '>', 0.5).get();
-            if (snapshot.empty) {
-                return res.json({});
-            }
+            const data = snapshot.docs.map(doc => doc.data());
 
-            const heatmapData = {};
-            snapshot.docs.forEach(doc => {
-                const { municipality } = doc.data();
-                if (municipality) {
-                    const formattedMunicipality = municipality.toLowerCase();
-                    heatmapData[formattedMunicipality] = (heatmapData[formattedMunicipality] || 0) + 1;
-                }
-            });
+            const heatmapData = data.reduce((acc, entry) => {
+                const municipality = entry.municipality.toLowerCase();
+                acc[municipality] = (acc[municipality] || 0) + 1;
+                return acc;
+            }, {});
 
             res.json(heatmapData);
         } catch (error) {
