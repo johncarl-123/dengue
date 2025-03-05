@@ -229,8 +229,8 @@ const handleSubmit = async (e) => {
       const saveData = { ...data, prediction };
 
       // Save Prediction
-      console.log('Sending save prediction request to:', "https://dengue-production.up.railway.app/save-prediction");
-      await axios.post("https://dengue-production.up.railway.app/save-prediction", saveData);
+      console.log('Sending save prediction request to:', "https://dengue-production.up.railway.app/result");
+      await axios.post("https://dengue-production.up.railway.app/result", saveData);
       console.log("Prediction saved successfully");
 
       setLoading(false);
