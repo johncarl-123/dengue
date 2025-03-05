@@ -21,20 +21,34 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware setup
-const allowedOrigins = process.env.ALLOWED_ORIGIN ? process.env.ALLOWED_ORIGIN.split(',') : ['*']; // Split multiple origins if there are multiple
+const allowedOrigins = process.env.ALLOWED_ORIGIN
+    ? process.env.ALLOWED_ORIGIN.split(',')
+    : ['http://localhost:5173', 'https://dengue-production.up.railway.app'];
+
 app.use(cors({
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'OPTIONS'], // Specify the allowed methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
 }));
+
+// Handle CORS preflight requests
+app.options('*', cors());
+
+// Parse incoming JSON requests
 app.use(bodyParser.json());
 
-// Firebase Initialization using firebaseServiceAccountKey.json
+// Firebase Initialization
 async function initializeFirebase() {
     try {
         const credentialsPath = path.join(__dirname, 'firebaseServiceAccountKey.json');
-        
+
         if (!fs.existsSync(credentialsPath)) {
             throw new Error(`Firebase credentials file not found at ${credentialsPath}`);
         }
@@ -54,21 +68,21 @@ async function initializeFirebase() {
     }
 }
 
-// Start the server after Firebase initialization
+// Start server after Firebase initializes
 initializeFirebase().then(() => {
     const db = admin.firestore();
 
-    // Root endpoint for the application
+    // Root API Endpoint
     app.get('/', (req, res) => {
         res.send('Welcome to the Dengue Prediction API. Use /predict to make a prediction.');
     });
 
-    // Prediction API endpoint
+    // Prediction API
     app.post('/predict', async (req, res) => {
         try {
             console.log('📥 Incoming request:', req.body);
 
-            // Extract and validate request body parameters
+            // Extract input values
             const {
                 age = 0,
                 gender = 'unknown',
@@ -98,7 +112,7 @@ initializeFirebase().then(() => {
                 console.warn("⚠️ Invalid year format. Using default value.");
             }
 
-            // Prepare arguments for the Python script
+            // Prepare Python script arguments
             const pythonArgs = [
                 'svm_model4.pkl',
                 age,
@@ -118,7 +132,7 @@ initializeFirebase().then(() => {
                 args: pythonArgs,
             };
 
-            // Run the Python script and get prediction results
+            // Run Python script for prediction
             const results = await new Promise((resolve, reject) => {
                 PythonShell.run('predict_model.py', options, (err, result) => {
                     if (err) reject(err);
@@ -126,7 +140,7 @@ initializeFirebase().then(() => {
                 });
             });
 
-            // Process prediction
+            // Process prediction result
             let prediction = null;
             if (results && results.length > 0) {
                 try {
@@ -138,7 +152,7 @@ initializeFirebase().then(() => {
 
             console.log("🔮 Prediction probability:", prediction);
 
-            // Save to Firestore only if prediction is significant
+            // Save prediction to Firestore if significant
             if (prediction !== null && prediction > 0.5) {
                 const predictionData = {
                     age,
@@ -165,7 +179,7 @@ initializeFirebase().then(() => {
         }
     });
 
-    // Heatmap Data API (Fetch positive cases)
+    // Heatmap Data API
     app.get('/heatmap-data', async (req, res) => {
         try {
             const snapshot = await db.collection('predict').where('target', '>', 0.5).get();
