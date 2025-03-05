@@ -18,7 +18,10 @@ const PORT = process.env.PORT || 3000;
 const MODEL_PATH = process.env.MODEL_PATH || 'svm_model4.pkl';
 
 // 🔹 CORS Middleware (Updated)
-const allowedOrigins = ['http://localhost:5173', 'https://dengue-production.up.railway.app'];
+const allowedOrigins = [
+    'http://localhost:5173',
+    'https://dengue-production.up.railway.app'
+];
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -33,7 +36,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Handle preflight requests
+// 🔹 Preflight Request Handler (Fix CORS issues)
 app.options('*', (req, res) => {
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
