@@ -30,6 +30,7 @@ app.use(cors({
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
+            console.warn(`⚠️ Blocked CORS request from: ${origin}`);
             callback(new Error('Not allowed by CORS'));
         }
     },
@@ -82,30 +83,10 @@ initializeFirebase().then(() => {
         try {
             console.log('📥 Incoming request:', req.body);
 
-            // Extract input values
-            const {
-                age = 0,
-                gender = 'unknown',
-                municipality = 'unknown',
-                year = 'unknown',
-                barangay = 'unknown',
-                fever = 0,
-                allergy = 0,
-                colds = 0,
-                chestPain = 0,
-                suka = 0,
-                headache = 0,
-                cough = 0,
-                stomachache = 0,
-                soreThroat = 0,
-                nausea = 0,
-                backPain = 0,
-                jointPain = 0,
-                noseBleed = 0,
-                wateryStool = 0,
-                preOrbitalPain = 0,
-                bodyMalaise = 0,
-            } = req.body;
+            const { age = 0, gender = 'unknown', municipality = 'unknown', year = 'unknown', barangay = 'unknown', 
+                fever = 0, allergy = 0, colds = 0, chestPain = 0, suka = 0, headache = 0, cough = 0, 
+                stomachache = 0, soreThroat = 0, nausea = 0, backPain = 0, jointPain = 0, 
+                noseBleed = 0, wateryStool = 0, preOrbitalPain = 0, bodyMalaise = 0 } = req.body;
 
             // Validate year format
             if (year !== 'unknown' && !/^\d{4}$/.test(year)) {
@@ -114,15 +95,9 @@ initializeFirebase().then(() => {
 
             // Prepare Python script arguments
             const pythonArgs = [
-                'svm_model4.pkl',
-                age,
-                gender.toLowerCase() === 'male' ? '1' : '0',
-                municipality,
-                year,
-                barangay,
-                fever, allergy, colds, chestPain, suka, headache, cough,
-                stomachache, soreThroat, nausea, backPain, jointPain,
-                noseBleed, wateryStool, preOrbitalPain, bodyMalaise
+                'svm_model4.pkl', age, gender.toLowerCase() === 'male' ? '1' : '0', municipality, year, barangay,
+                fever, allergy, colds, chestPain, suka, headache, cough, stomachache, soreThroat, 
+                nausea, backPain, jointPain, noseBleed, wateryStool, preOrbitalPain, bodyMalaise
             ].map(String);
 
             const options = {
@@ -154,19 +129,7 @@ initializeFirebase().then(() => {
 
             // Save prediction to Firestore if significant
             if (prediction !== null && prediction > 0.5) {
-                const predictionData = {
-                    age,
-                    gender: gender.toLowerCase() === 'male' ? 1 : 0,
-                    municipality,
-                    year,
-                    barangay,
-                    fever, allergy, colds, chestPain, suka, headache, cough,
-                    stomachache, soreThroat, nausea, backPain, jointPain,
-                    noseBleed, wateryStool, preOrbitalPain, bodyMalaise,
-                    target: prediction,
-                };
-
-                await db.collection('predict').add(predictionData);
+                await db.collection('predict').add({ ...req.body, target: prediction });
                 console.log("✅ Positive case added to Firestore.");
             } else {
                 console.log("ℹ️ Prediction is not high enough. Not saving.");
@@ -187,8 +150,7 @@ initializeFirebase().then(() => {
 
             // Count cases by municipality
             const heatmapData = data.reduce((acc, entry) => {
-                const { municipality } = entry;
-                acc[municipality] = (acc[municipality] || 0) + 1;
+                acc[entry.municipality] = (acc[entry.municipality] || 0) + 1;
                 return acc;
             }, {});
 
