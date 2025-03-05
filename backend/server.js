@@ -75,7 +75,7 @@ initializeFirebase().then(() => {
         res.send('Welcome to the Dengue Prediction API.');
     });
 
-    app.post('/predict', async (req, res) => {
+    app.post("https://dengue-production.up.railway.app/predict", async (req, res) => {
         try {
             console.log('📥 Incoming request:', JSON.stringify(req.body, null, 2));
 
