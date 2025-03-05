@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename);
 
 // Initialize Express
 const app = express();
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware setup
 const allowedOrigins = process.env.ALLOWED_ORIGIN ? process.env.ALLOWED_ORIGIN.split(',') : ['*']; // Split multiple origins if there are multiple
@@ -30,24 +30,16 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 
-// Firebase Initialization
+// Firebase Initialization using firebaseServiceAccountKey.json
 async function initializeFirebase() {
     try {
-        let serviceAccount;
-
-        if (process.env.FIREBASE_CREDENTIALS) {
-            // If credentials are stored as an environment variable (Render Deployment)
-            serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
-        } else if (process.env.FIREBASE_CREDENTIALS_PATH) {
-            // If credentials are stored in a file (Local Development)
-            const credentialsPath = process.env.FIREBASE_CREDENTIALS_PATH;
-            if (!fs.existsSync(credentialsPath)) {
-                throw new Error(`Firebase credentials file not found at ${credentialsPath}`);
-            }
-            serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
-        } else {
-            throw new Error("Missing Firebase credentials. Set FIREBASE_CREDENTIALS or FIREBASE_CREDENTIALS_PATH.");
+        const credentialsPath = path.join(__dirname, 'firebaseServiceAccountKey.json');
+        
+        if (!fs.existsSync(credentialsPath)) {
+            throw new Error(`Firebase credentials file not found at ${credentialsPath}`);
         }
+
+        const serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
 
         if (!admin.apps.length) {
             admin.initializeApp({

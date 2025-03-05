@@ -220,14 +220,14 @@ const Predict = () => {
     };
 
     axios
-      .post("https://dengue-g8ge.onrender.com/predict", data)
+      .post("https://dengue-production.up.railway.app/predict", data)
       .then((response) => {
         const prediction = response.data.prediction;
 
         const saveData = { ...data, prediction };
 
         axios
-          .post("https://dengue-g8ge.onrender.com/save-prediction", saveData)
+          .post("https://dengue-production.up.railway.app/save-prediction", saveData)
           .then(() => {
             console.log("Prediction saved successfully");
           })
