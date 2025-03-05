@@ -1,4 +1,3 @@
-// Import required modules
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -9,53 +8,44 @@ import admin from 'firebase-admin';
 import dotenv from 'dotenv';
 import fs from 'fs';
 
-// Load environment variables from .env
 dotenv.config();
 
-// Define directory paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize Express
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware setup
-const allowedOrigins = process.env.ALLOWED_ORIGIN
-    ? process.env.ALLOWED_ORIGIN.split(',')
-    : ['http://localhost:5173', 'https://dengue-production.up.railway.app'];
+// 🔹 Explicitly define allowed origins
+const allowedOrigins = [
+    'http://localhost:5173',
+    'https://dengue-production.up.railway.app'
+];
 
-app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.warn(`⚠️ Blocked CORS request from: ${origin}`);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-}));
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(204);
+    }
+    next();
+});
 
-// Handle CORS preflight requests
-app.options('*', cors());
-
-// Parse incoming JSON requests
 app.use(bodyParser.json());
 
-// Firebase Initialization
+// Initialize Firebase
 async function initializeFirebase() {
     try {
         const credentialsPath = path.join(__dirname, 'firebaseServiceAccountKey.json');
-
         if (!fs.existsSync(credentialsPath)) {
             throw new Error(`Firebase credentials file not found at ${credentialsPath}`);
         }
-
         const serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
-
         if (!admin.apps.length) {
             admin.initializeApp({
                 credential: admin.credential.cert(serviceAccount),
@@ -69,35 +59,34 @@ async function initializeFirebase() {
     }
 }
 
-// Start server after Firebase initializes
 initializeFirebase().then(() => {
     const db = admin.firestore();
 
-    // Root API Endpoint
     app.get('/', (req, res) => {
-        res.send('Welcome to the Dengue Prediction API. Use /predict to make a prediction.');
+        res.send('Welcome to the Dengue Prediction API.');
     });
 
-    // Prediction API
     app.post('/predict', async (req, res) => {
         try {
             console.log('📥 Incoming request:', req.body);
 
-            const { age = 0, gender = 'unknown', municipality = 'unknown', year = 'unknown', barangay = 'unknown', 
-                fever = 0, allergy = 0, colds = 0, chestPain = 0, suka = 0, headache = 0, cough = 0, 
-                stomachache = 0, soreThroat = 0, nausea = 0, backPain = 0, jointPain = 0, 
-                noseBleed = 0, wateryStool = 0, preOrbitalPain = 0, bodyMalaise = 0 } = req.body;
+            const {
+                age = 0, gender = 'unknown', municipality = 'unknown', year = 'unknown',
+                barangay = 'unknown', fever = 0, allergy = 0, colds = 0, chestPain = 0,
+                suka = 0, headache = 0, cough = 0, stomachache = 0, soreThroat = 0,
+                nausea = 0, backPain = 0, jointPain = 0, noseBleed = 0,
+                wateryStool = 0, preOrbitalPain = 0, bodyMalaise = 0,
+            } = req.body;
 
-            // Validate year format
             if (year !== 'unknown' && !/^\d{4}$/.test(year)) {
                 console.warn("⚠️ Invalid year format. Using default value.");
             }
 
-            // Prepare Python script arguments
             const pythonArgs = [
-                'svm_model4.pkl', age, gender.toLowerCase() === 'male' ? '1' : '0', municipality, year, barangay,
-                fever, allergy, colds, chestPain, suka, headache, cough, stomachache, soreThroat, 
-                nausea, backPain, jointPain, noseBleed, wateryStool, preOrbitalPain, bodyMalaise
+                'svm_model4.pkl', age, gender.toLowerCase() === 'male' ? '1' : '0',
+                municipality, year, barangay, fever, allergy, colds, chestPain,
+                suka, headache, cough, stomachache, soreThroat, nausea, backPain,
+                jointPain, noseBleed, wateryStool, preOrbitalPain, bodyMalaise
             ].map(String);
 
             const options = {
@@ -107,7 +96,6 @@ initializeFirebase().then(() => {
                 args: pythonArgs,
             };
 
-            // Run Python script for prediction
             const results = await new Promise((resolve, reject) => {
                 PythonShell.run('predict_model.py', options, (err, result) => {
                     if (err) reject(err);
@@ -115,7 +103,6 @@ initializeFirebase().then(() => {
                 });
             });
 
-            // Process prediction result
             let prediction = null;
             if (results && results.length > 0) {
                 try {
@@ -127,9 +114,16 @@ initializeFirebase().then(() => {
 
             console.log("🔮 Prediction probability:", prediction);
 
-            // Save prediction to Firestore if significant
             if (prediction !== null && prediction > 0.5) {
-                await db.collection('predict').add({ ...req.body, target: prediction });
+                const predictionData = {
+                    age, gender: gender.toLowerCase() === 'male' ? 1 : 0,
+                    municipality, year, barangay, fever, allergy, colds, chestPain,
+                    suka, headache, cough, stomachache, soreThroat, nausea,
+                    backPain, jointPain, noseBleed, wateryStool, preOrbitalPain, bodyMalaise,
+                    target: prediction,
+                };
+
+                await db.collection('predict').add(predictionData);
                 console.log("✅ Positive case added to Firestore.");
             } else {
                 console.log("ℹ️ Prediction is not high enough. Not saving.");
@@ -142,15 +136,14 @@ initializeFirebase().then(() => {
         }
     });
 
-    // Heatmap Data API
     app.get('/heatmap-data', async (req, res) => {
         try {
             const snapshot = await db.collection('predict').where('target', '>', 0.5).get();
             const data = snapshot.docs.map(doc => doc.data());
 
-            // Count cases by municipality
             const heatmapData = data.reduce((acc, entry) => {
-                acc[entry.municipality] = (acc[entry.municipality] || 0) + 1;
+                const { municipality } = entry;
+                acc[municipality] = (acc[municipality] || 0) + 1;
                 return acc;
             }, {});
 
@@ -161,7 +154,6 @@ initializeFirebase().then(() => {
         }
     });
 
-    // Start the server
     app.listen(PORT, () => {
         console.log(`🚀 Server is running on port ${PORT}`);
     });
