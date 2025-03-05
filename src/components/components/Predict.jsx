@@ -202,56 +202,55 @@ const Predict = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-  
-    try {
+  // Keep everything the same as before, but check the API calls.
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
       const symptomData = { ...formData.symptoms };
       const data = {
-        age: formData.age,
-        gender: formData.gender,
-        municipality: formData.municipality,
-        barangay: formData.barangay,
-        year: formData.year,
-        ...Object.keys(symptomData).reduce((acc, symptom) => {
-          acc[symptom] = symptomData[symptom] === "yes" ? 1 : 0;
-          return acc;
-        }, {}),
+          age: formData.age,
+          gender: formData.gender,
+          municipality: formData.municipality,
+          barangay: formData.barangay,
+          year: formData.year,
+          ...Object.keys(symptomData).reduce((acc, symptom) => {
+              acc[symptom] = symptomData[symptom] === "yes" ? 1 : 0;
+              return acc;
+          }, {}),
       };
-  
+
+      console.log('Sending prediction request to:', "https://dengue-production.up.railway.app/predict");
       // First API call - Prediction
       const response = await axios.post("https://dengue-production.up.railway.app/predict", data);
       const { prediction, recommendation } = response.data;
-  
+
       const saveData = { ...data, prediction };
-  
-      try {
-        // Second API call - Save Prediction
-        await axios.post("https://dengue-production.up.railway.app/save-prediction", saveData);
-        console.log("Prediction saved successfully");
-      } catch (error) {
-        console.error("Error saving prediction", error.response || error.message);
-      }
-  
+
+      // Save Prediction
+      console.log('Sending save prediction request to:', "https://dengue-production.up.railway.app/save-prediction");
+      await axios.post("https://dengue-production.up.railway.app/save-prediction", saveData);
+      console.log("Prediction saved successfully");
+
       setLoading(false);
       navigate("/result", { state: { prediction, recommendation } });
-  
-    } catch (error) {
+
+  } catch (error) {
       setLoading(false);
-  
+
       if (error.response) {
-        console.error("Prediction error:", error.response.data);
-        alert(`Error: ${error.response.data.message || "Unable to make a prediction. Please try again."}`);
+          console.error("Prediction error:", error.response.data);
+          alert(`Error: ${error.response.data.message || "Unable to make a prediction. Please try again."}`);
       } else if (error.request) {
-        console.error("Prediction error: No response from server", error.request);
-        alert("Error: No response from server. Check your connection.");
+          console.error("Prediction error: No response from server", error.request);
+          alert("Error: No response from server. Check your connection.");
       } else {
-        console.error("Prediction error:", error.message);
-        alert("Error: Something went wrong. Please try again.");
+          console.error("Prediction error:", error.message);
+          alert("Error: Something went wrong. Please try again.");
       }
-    }
-  };
+  }
+};
   
   
 
