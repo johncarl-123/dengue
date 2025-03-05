@@ -202,48 +202,57 @@ const Predict = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
-    const symptomData = { ...formData.symptoms };
-    const data = {
-      age: formData.age,
-      gender: formData.gender,
-      municipality: formData.municipality,
-      barangay: formData.barangay,
-      year: formData.year,
-      ...Object.keys(symptomData).reduce((acc, symptom) => {
-        acc[symptom] = symptomData[symptom] === "yes" ? 1 : 0;
-        return acc;
-      }, {}),
-    };
-
-    axios
-      .post("https://dengue-production.up.railway.app/predict", data)
-      .then((response) => {
-        const prediction = response.data.prediction;
-
-        const saveData = { ...data, prediction };
-
-        axios
-          .post("https://dengue-production.up.railway.app/save-prediction", saveData)
-          .then(() => {
-            console.log("Prediction saved successfully");
-          })
-          .catch((error) => {
-            console.error("Error saving prediction", error);
-          });
-
-        setLoading(false);
-        navigate("/result", { state: { prediction } });
-      })
-      .catch((error) => {
-        setLoading(false);
-        console.error("Prediction error", error);
-        alert("Error: Unable to make a prediction. Please try again.");
-      });
+  
+    try {
+      const symptomData = { ...formData.symptoms };
+      const data = {
+        age: formData.age,
+        gender: formData.gender,
+        municipality: formData.municipality,
+        barangay: formData.barangay,
+        year: formData.year,
+        ...Object.keys(symptomData).reduce((acc, symptom) => {
+          acc[symptom] = symptomData[symptom] === "yes" ? 1 : 0;
+          return acc;
+        }, {}),
+      };
+  
+      // First API call - Prediction
+      const response = await axios.post("https://dengue-production.up.railway.app/predict", data);
+      const prediction = response.data.prediction;
+  
+      const saveData = { ...data, prediction };
+  
+      try {
+        // Second API call - Save Prediction
+        await axios.post("https://dengue-production.up.railway.app/save-prediction", saveData);
+        console.log("Prediction saved successfully");
+      } catch (error) {
+        console.error("Error saving prediction", error.response || error.message);
+      }
+  
+      setLoading(false);
+      navigate("/result", { state: { prediction } });
+  
+    } catch (error) {
+      setLoading(false);
+      
+      if (error.response) {
+        console.error("Prediction error:", error.response.data);
+        alert(`Error: ${error.response.data.message || "Unable to make a prediction. Please try again."}`);
+      } else if (error.request) {
+        console.error("Prediction error: No response from server", error.request);
+        alert("Error: No response from server. Check your connection.");
+      } else {
+        console.error("Prediction error:", error.message);
+        alert("Error: Something went wrong. Please try again.");
+      }
+    }
   };
+  
 
   return (
     <div>
