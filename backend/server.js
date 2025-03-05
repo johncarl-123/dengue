@@ -14,14 +14,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 const MODEL_PATH = process.env.MODEL_PATH || 'svm_model4.pkl';
 
 // 🔹 CORS Middleware (Updated)
-const allowedOrigins = [
-    'http://localhost:5173',
-    'https://dengue-production.up.railway.app'
-];
+const allowedOrigins = ['https://dengue-production.up.railway.app'];
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -36,7 +33,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// 🔹 Preflight Request Handler (Fix CORS issues)
+// Handle preflight requests
 app.options('*', (req, res) => {
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -75,9 +72,9 @@ initializeFirebase().then(() => {
         res.send('Welcome to the Dengue Prediction API.');
     });
 
-    app.post('/predict', async (req, res) => {
+    app.post('https://dengue-production.up.railway.app/predict', async (req, res) => {
         try {
-            console.log('📥 Incoming request:', JSON.stringify(req.body, null, 2));
+            console.log('📥 Incoming request:', req.body);
 
             let {
                 age = 0, gender = 'unknown', municipality = 'unknown', year = 'unknown',
@@ -107,8 +104,6 @@ initializeFirebase().then(() => {
                 args: pythonArgs,
             };
 
-            console.log("🔄 Running Python script with args:", pythonArgs);
-
             const results = await new Promise((resolve, reject) => {
                 PythonShell.run('predict_model.py', options, (err, result) => {
                     if (err) {
@@ -118,8 +113,6 @@ initializeFirebase().then(() => {
                     resolve(result);
                 });
             });
-
-            console.log("📜 Raw Python Output:", results);
 
             let prediction = null;
             if (results && results.length > 0) {
