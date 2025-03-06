@@ -234,7 +234,7 @@ const handleSubmit = async (e) => {
       console.log("Prediction saved successfully");
 
       setLoading(false);
-      navigate("/result", { state: { prediction, recommendation } });
+      navigate("https://dengue-production.up.railway.app/result", { state: { prediction, recommendation } });
 
   } catch (error) {
       setLoading(false);

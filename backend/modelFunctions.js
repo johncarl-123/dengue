@@ -1,6 +1,6 @@
 export async function makePrediction(inputData) {
   try {
-    const response = await fetch("https://dengue-g8ge.onrender.com/predict", {
+    const response = await fetch("https://dengue-production.up.railway.app/predict", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
