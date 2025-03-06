@@ -14,8 +14,29 @@ const firebaseConfig = {
 // Debugging: Log config to check for undefined values
 console.log("Firebase Config:", firebaseConfig);
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Check if any Firebase config value is missing
+if (
+    !firebaseConfig.apiKey ||
+    !firebaseConfig.authDomain ||
+    !firebaseConfig.projectId ||
+    !firebaseConfig.storageBucket ||
+    !firebaseConfig.messagingSenderId ||
+    !firebaseConfig.appId
+) {
+    throw new Error("Firebase configuration is incomplete. Check your environment variables.");
+}
 
-export { db, app };  // Export app instead of firebaseConfig
+// Initialize Firebase
+let app;
+let db;
+
+try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    console.log("Firebase initialized successfully!");
+} catch (error) {
+    console.error("Error initializing Firebase:", error);
+    throw new Error("Failed to initialize Firebase. Check your configuration.");
+}
+
+export { db, app };  // Export app and db for use in other files
