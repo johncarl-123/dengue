@@ -224,10 +224,8 @@ const Predict = () => {
       const response = await axios.post("https://dengue-production.up.railway.app/predict", data);
       const { prediction, recommendation } = response.data;
 
-      const saveData = { ...data, prediction };
-
-      console.log('Saving prediction result:', saveData);
-      await axios.post("https://dengue-production.up.railway.app/result", saveData);
+      console.log('Saving prediction result:', { ...data, prediction });
+      await axios.post("https://dengue-production.up.railway.app/result", { ...data, prediction });
       console.log("Prediction saved successfully");
 
       setLoading(false);

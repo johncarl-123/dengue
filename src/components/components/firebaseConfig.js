@@ -39,4 +39,4 @@ try {
     throw new Error("Failed to initialize Firebase. Check your configuration.");
 }
 
-export { db, app };  // Export app and db for use in other files
+export { db, firebaseConfig };  // Export firebaseConfig along with db and app

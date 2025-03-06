@@ -23,16 +23,16 @@ if (!process.env.MODEL_PATH) {
     process.exit(1);
 }
 
-// 🔹 CORS Middleware (Allow all origins for testing)
+// 🔹 CORS Middleware (Allow specific frontend origin)
 app.use(cors({
-    origin: '*',
+    origin: 'https://dengue-project.vercel.app', // Replace with your frontend URL
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // 🔹 Preflight Request Handler
 app.options('*', (req, res) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Origin', 'https://dengue-project.vercel.app');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.sendStatus(200);
