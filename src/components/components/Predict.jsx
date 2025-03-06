@@ -134,19 +134,19 @@ const Predict = () => {
       "Villaflor",
     ],
     'San Isidro': [
-        "Abehilan",
-        "Baryong Daan",
-        "Baunos",
-        "Cabanugan",
-        "Caimbang",
-        "Cambansag",
-        "Candungao",
-        "Cansague Norte",
-        "Cansague Sur",
-        "Causwagan Sur",
-        "Masonoy",
-        "Poblacion"
-      ],
+      "Abehilan",
+      "Baryong Daan",
+      "Baunos",
+      "Cabanugan",
+      "Caimbang",
+      "Cambansag",
+      "Candungao",
+      "Cansague Norte",
+      "Cansague Sur",
+      "Causwagan Sur",
+      "Masonoy",
+      "Poblacion"
+    ],
     Tubigon: [
       "Bagongbanwa",
       "Banlasan",
@@ -202,57 +202,51 @@ const Predict = () => {
     });
   };
 
-  // Keep everything the same as before, but check the API calls.
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-  try {
+    try {
       const symptomData = { ...formData.symptoms };
       const data = {
-          age: formData.age,
-          gender: formData.gender,
-          municipality: formData.municipality,
-          barangay: formData.barangay,
-          year: formData.year,
-          ...Object.keys(symptomData).reduce((acc, symptom) => {
-              acc[symptom] = symptomData[symptom] === "yes" ? 1 : 0;
-              return acc;
-          }, {}),
+        age: formData.age,
+        gender: formData.gender,
+        municipality: formData.municipality,
+        barangay: formData.barangay,
+        year: formData.year,
+        ...Object.keys(symptomData).reduce((acc, symptom) => {
+          acc[symptom] = symptomData[symptom] === "yes" ? 1 : 0;
+          return acc;
+        }, {}),
       };
 
       console.log('Sending prediction request to:', "https://dengue-production.up.railway.app/predict");
-      // First API call - Prediction
       const response = await axios.post("https://dengue-production.up.railway.app/predict", data);
       const { prediction, recommendation } = response.data;
 
       const saveData = { ...data, prediction };
 
-      // Save Prediction
-      console.log('Sending save prediction request to:', "https://dengue-production.up.railway.app/result");
+      console.log('Saving prediction result:', saveData);
       await axios.post("https://dengue-production.up.railway.app/result", saveData);
       console.log("Prediction saved successfully");
 
       setLoading(false);
-      navigate("https://dengue-production.up.railway.app/result", { state: { prediction, recommendation } });
-
-  } catch (error) {
+      navigate("/result", { state: { prediction, recommendation } });
+    } catch (error) {
       setLoading(false);
 
       if (error.response) {
-          console.error("Prediction error:", error.response.data);
-          alert(`Error: ${error.response.data.message || "Unable to make a prediction. Please try again."}`);
+        console.error("Prediction error:", error.response.data);
+        alert(`Error: ${error.response.data.message || "Unable to make a prediction. Please try again."}`);
       } else if (error.request) {
-          console.error("Prediction error: No response from server", error.request);
-          alert("Error: No response from server. Check your connection.");
+        console.error("Prediction error: No response from server", error.request);
+        alert("Error: No response from server. Check your connection.");
       } else {
-          console.error("Prediction error:", error.message);
-          alert("Error: Something went wrong. Please try again.");
+        console.error("Prediction error:", error.message);
+        alert("Error: Something went wrong. Please try again.");
       }
-  }
-};
-  
-  
+    }
+  };
 
   return (
     <div>
