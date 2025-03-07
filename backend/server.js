@@ -27,7 +27,7 @@ app.use(cors({
 
 // 🔹 Preflight Request Handler
 app.options('*', (req, res) => {
-    res.header('Access-Control-Allow-Origin', 'https://dengue-project.vercel.app');
+    res.header('Access-Control-Allow-Origin', 'https://dengue-project.vercel.app/predict');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true'); // Allow credentials (if needed)
