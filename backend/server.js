@@ -32,7 +32,13 @@ app.use(cors({
 }));
 
 // 🔹 Preflight Request Handler
-app.options('*', cors()); // Allow preflight for all routes
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', 'https://dengue-project.vercel.app');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true'); // If cookies are used
+    res.sendStatus(204); // No content for preflight requests
+});
 
 app.use(bodyParser.json());
 
