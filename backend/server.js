@@ -17,6 +17,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MODEL_PATH = process.env.MODEL_PATH || 'svm_model4.pkl';
 
+// 🔹 Validate Environment Variables
+if (!process.env.MODEL_PATH) {
+    console.error('❌ MODEL_PATH environment variable is not set.');
+    process.exit(1);
+}
+
 // 🔹 CORS Middleware (Allow specific frontend origin)
 app.use(cors({
     origin: 'https://dengue-project.vercel.app', // Replace with your frontend URL
@@ -27,7 +33,7 @@ app.use(cors({
 
 // 🔹 Preflight Request Handler
 app.options('*', (req, res) => {
-    res.header('Access-Control-Allow-Origin', 'https://dengue-project.vercel.app/predict');
+    res.header('Access-Control-Allow-Origin', 'https://dengue-project.vercel.app');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true'); // Allow credentials (if needed)
