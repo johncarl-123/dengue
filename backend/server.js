@@ -32,11 +32,11 @@ app.use(cors({
 }));
 
 // 🔹 Preflight Request Handler
-app.options('*', (req, res) => {
+app.options('/predict', (req, res) => {
     res.header('Access-Control-Allow-Origin', 'https://dengue-project.vercel.app');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true'); // Allow credentials (if needed)
+    res.header('Access-Control-Allow-Credentials', 'true'); // If cookies are used
     res.sendStatus(200);
 });
 
@@ -73,7 +73,7 @@ initializeFirebase().then(() => {
     });
 
     // 🔹 Predict Endpoint
-    app.post('https://dengue-production.up.railway.app/predict', async (req, res) => {
+    app.post('/predict', async (req, res) => {
         try {
             console.log('📥 Incoming request:', JSON.stringify(req.body, null, 2));
 
