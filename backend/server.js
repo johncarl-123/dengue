@@ -14,7 +14,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 const MODEL_PATH = process.env.MODEL_PATH || 'svm_model4.pkl';
 
 // 🔹 Validate Environment Variables
@@ -25,7 +24,7 @@ if (!process.env.MODEL_PATH) {
 
 // 🔹 CORS Middleware (Allow specific frontend origin)
 app.use(cors({
-    origin: 'https://dengue-project.vercel.app/predict', // Replace with your frontend URL
+    origin: 'https://dengue-project.vercel.app', // Allow requests from your frontend
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true, // Allow credentials (if needed)
@@ -33,7 +32,7 @@ app.use(cors({
 
 // 🔹 Preflight Request Handler
 app.options('*', (req, res) => {
-    res.header('Access-Control-Allow-Origin', 'https://dengue-project.vercel.app/predict');
+    res.header('Access-Control-Allow-Origin', 'https://dengue-project.vercel.app');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true'); // If cookies are used
@@ -181,8 +180,8 @@ initializeFirebase().then(() => {
     });
 
     // 🔹 Start Server
-    app.listen(PORT, () => {
-        console.log(`🚀 Server is running on port ${PORT}`);
+    app.listen(process.env.PORT, () => {
+        console.log(`🚀 Server is running on port ${process.env.PORT}`);
     });
 
 }).catch(err => {
