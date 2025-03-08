@@ -66,6 +66,15 @@ async function initializeFirebase() {
 initializeFirebase().then(() => {
     const db = admin.firestore();
 
+    // 🔹 Test Firestore Connection
+    db.collection('test').doc('test').set({ test: 'test' })
+        .then(() => {
+            console.log('✅ Firestore connection successful!');
+        })
+        .catch((err) => {
+            console.error('❌ Firestore connection failed:', err.message);
+        });
+
     // 🔹 Root Endpoint
     app.get('/', (req, res) => {
         res.send('Welcome to the Dengue Prediction API.');
