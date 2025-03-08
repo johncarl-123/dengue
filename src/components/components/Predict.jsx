@@ -205,7 +205,7 @@ const Predict = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-  
+
     try {
       const symptomData = { ...formData.symptoms };
       const data = {
@@ -219,27 +219,27 @@ const Predict = () => {
           return acc;
         }, {}),
       };
-  
+
       console.log('Sending prediction request to:', "https://dengue-production.up.railway.app/predict");
       const response = await axios.post("https://dengue-production.up.railway.app/predict", data, {
         withCredentials: true, // Include credentials (if needed)
       });
-      const { prediction, recommendation } = response.data;
-  
+      const { prediction } = response.data;
+
       console.log('Saving prediction result:', { ...data, prediction });
       await axios.post("https://dengue-production.up.railway.app/result", { ...data, prediction }, {
         withCredentials: true, // Include credentials (if needed)
       });
       console.log("Prediction saved successfully");
-  
+
       setLoading(false);
-      navigate("/result", { state: { prediction, recommendation } });
+      navigate("/result", { state: { prediction } });
     } catch (error) {
       setLoading(false);
-  
+
       if (error.response) {
         console.error("Prediction error:", error.response.data);
-        alert(`Error: ${error.response.data.message || "Unable to make a prediction. Please try again."}`);
+        alert(`Error: ${error.response.data.error || "Unable to make a prediction. Please try again."}`);
       } else if (error.request) {
         console.error("Prediction error: No response from server", error.request);
         alert("Error: No response from server. Check your connection.");
