@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
-import fs from 'fs';
 
 dotenv.config();
 
@@ -31,8 +30,7 @@ app.use(cors({
 }));
 
 // 🔹 Preflight Request Handler
-// 🔹 Preflight Request Handler for /predict
-app.options('/predict', (req, res) => {
+app.options('*', (req, res) => {
     res.header('Access-Control-Allow-Origin', 'https://dengue-project.vercel.app');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -45,11 +43,12 @@ app.use(bodyParser.json());
 // 🔹 Initialize Firebase
 async function initializeFirebase() {
     try {
-        const credentialsPath = path.join(__dirname, 'firebaseServiceAccountKey.json');
-        if (!fs.existsSync(credentialsPath)) {
-            throw new Error(`Firebase credentials file not found at ${credentialsPath}`);
+        const firebaseConfig = process.env.FIREBASE_CONFIG;
+        if (!firebaseConfig) {
+            throw new Error('❌ FIREBASE_CONFIG environment variable is not set.');
         }
-        const serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
+
+        const serviceAccount = JSON.parse(firebaseConfig);
 
         if (!admin.apps.length) {
             admin.initializeApp({
