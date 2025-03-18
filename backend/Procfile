@@ -1,1 +1,5 @@
-python3 -m waitress --listen=0.0.0.0:$PORT predict_model:app
+[build]
+builder = "NIXPACKS"
+
+[start]
+cmd = "python3 -m waitress --listen=0.0.0.0:$PORT predict_model:app"
