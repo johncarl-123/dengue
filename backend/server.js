@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
-import fs from 'fs';
 
 dotenv.config();
 
@@ -14,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // ✅ Ensure PORT is correctly set
 const MODEL_PATH = process.env.MODEL_PATH || 'svm_model4.pkl';
 
 // 🔹 Validate Environment Variables
@@ -23,33 +22,23 @@ if (!process.env.MODEL_PATH) {
     process.exit(1);
 }
 
-// 🔹 CORS Middleware (Allow specific frontend origin)
+// 🔹 CORS Middleware (Allow frontend requests)
 app.use(cors({
-    origin: 'https://dengue-project.vercel.app', // Replace with your frontend URL
+    origin: 'https://dengue-project.vercel.app',
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true, // Allow credentials (if needed)
+    credentials: true,
 }));
-
-// 🔹 Preflight Request Handler
-app.options('*', (req, res) => {
-    res.header('Access-Control-Allow-Origin', 'https://dengue-project.vercel.app/predict');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true'); // If cookies are used
-    res.sendStatus(204); // No content for preflight requests
-});
 
 app.use(bodyParser.json());
 
 // 🔹 Initialize Firebase
 async function initializeFirebase() {
     try {
-        const credentialsPath = path.join(__dirname, 'firebaseServiceAccountKey.json');
-        if (!fs.existsSync(credentialsPath)) {
-            throw new Error(`Firebase credentials file not found at ${credentialsPath}`);
-        }
-        const serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
+        const firebaseConfig = process.env.FIREBASE_CONFIG;
+        if (!firebaseConfig) throw new Error('❌ FIREBASE_CONFIG is missing.');
+
+        const serviceAccount = JSON.parse(firebaseConfig);
 
         if (!admin.apps.length) {
             admin.initializeApp({
@@ -64,10 +53,10 @@ async function initializeFirebase() {
     }
 }
 
+// 🔹 Start Server After Firebase Initializes
 initializeFirebase().then(() => {
     const db = admin.firestore();
 
-    // 🔹 Root Endpoint
     app.get('/', (req, res) => {
         res.send('Welcome to the Dengue Prediction API.');
     });
@@ -77,7 +66,6 @@ initializeFirebase().then(() => {
         try {
             console.log('📥 Incoming request:', JSON.stringify(req.body, null, 2));
 
-            // Validate required fields
             const requiredFields = ['age', 'gender', 'municipality', 'year', 'barangay'];
             for (const field of requiredFields) {
                 if (!req.body[field]) {
@@ -93,10 +81,8 @@ initializeFirebase().then(() => {
                 noseBleed = 0, wateryStool = 0, preOrbitalPain = 0, bodyMalaise = 0,
             } = req.body;
 
-            // Validate Year Format
             if (!/^\d{4}$/.test(year)) {
                 console.warn("⚠️ Invalid year format. Setting year to 'unknown'.");
-                year = 'unknown';
             }
 
             const pythonArgs = [
@@ -106,6 +92,8 @@ initializeFirebase().then(() => {
                 nausea, backPain, jointPain, noseBleed, wateryStool, preOrbitalPain, bodyMalaise
             ].map(String);
 
+            console.log("🔄 Running Python script with args:", pythonArgs);
+
             const options = {
                 mode: 'text',
                 pythonOptions: ['-u'],
@@ -113,8 +101,6 @@ initializeFirebase().then(() => {
                 args: pythonArgs,
                 timeout: 10000, // 10 seconds timeout
             };
-
-            console.log("🔄 Running Python script with args:", pythonArgs);
 
             const results = await new Promise((resolve, reject) => {
                 PythonShell.run('predict_model.py', options, (err, result) => {
