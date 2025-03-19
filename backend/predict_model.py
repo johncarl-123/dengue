@@ -10,7 +10,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+
+# Enable CORS for specific frontend
+CORS(app, origins=["https://dengue-project.vercel.app"])
 
 # Load the model at startup
 MODEL_PATH = "svm_model4.pkl"
@@ -21,16 +23,6 @@ try:
     logger.info("✅ Model loaded successfully.")
 except Exception as e:
     logger.error(f"❌ Failed to load model: {e}")
-
-# Helper function to parse binary (1/0) values safely
-def parse_binary(value):
-    try:
-        value = int(value)
-        if value not in [0, 1]:
-            raise ValueError("Binary values must be 0 or 1")
-        return value
-    except ValueError:
-        return None  # Return None for invalid values
 
 # Health check endpoint
 @app.route("/", methods=["GET"])
@@ -61,12 +53,12 @@ def predict():
             municipality = data["municipality"]
             year = data["year"]
             barangay = data["barangay"]
-            symptoms = [parse_binary(s) for s in data["symptoms"]]
+            symptoms = [int(s) for s in data["symptoms"]]
         except (ValueError, TypeError):
             return jsonify({"error": "Invalid data format"}), 400
 
         # Ensure symptoms are all valid binary values (0 or 1)
-        if None in symptoms or len(symptoms) != 16:
+        if any(s not in [0, 1] for s in symptoms) or len(symptoms) != 16:
             return jsonify({"error": "Symptoms must be a list of 16 binary (0/1) values"}), 400
 
         # Prepare input features
@@ -74,8 +66,8 @@ def predict():
         logger.info(f"🧬 Features: {features}")
 
         # Get prediction probability
-        probabilities = model.predict_proba(features)[0]  # Get probabilities for both classes
-        positive_class_probability = probabilities[1]  # Probability of class 1 (positive class)
+        probabilities = model.predict_proba(features)[0]
+        positive_class_probability = probabilities[1]
 
         # Convert to percentage
         probability_percentage = positive_class_probability * 100
@@ -92,5 +84,5 @@ def predict():
         return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
-    port = int(os.getenv("PORT", 5000))  # Railway sets the PORT automatically
+    port = int(os.getenv("PORT", 5000))  
     app.run(host="0.0.0.0", port=port)
