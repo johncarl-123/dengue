@@ -12,27 +12,26 @@ const Predict = () => {
     barangay: "",
     year: "",
     symptoms: {
-      fever: "",
-      allergy: "",
-      colds: "",
-      chestPain: "",
-      suka: "",
-      headache: "",
-      cough: "",
-      stomachache: "",
-      soreThroat: "",
-      nausea: "",
-      backPain: "",
-      jointPain: "",
-      noseBleed: "",
-      wateryStool: "",
-      preOrbitalPain: "",
-      bodyMalaise: "",
+      fever: 0,
+      allergy: 0,
+      colds: 0,
+      chestPain: 0,
+      suka: 0,
+      headache: 0,
+      cough: 0,
+      stomachache: 0,
+      soreThroat: 0,
+      nausea: 0,
+      backPain: 0,
+      jointPain: 0,
+      noseBleed: 0,
+      wateryStool: 0,
+      preOrbitalPain: 0,
+      bodyMalaise: 0,
     },
   });
 
   const [loading, setLoading] = useState(false);
-  const [reminderVisible, setReminderVisible] = useState(true);
   const navigate = useNavigate();
 
   const symptomQuestions = {
@@ -56,149 +55,54 @@ const Predict = () => {
 
   const municipalityData = {
     Inabanga: [
-      "Anonang",
-      "Bahan",
-      "Badiang",
-      "Baguhan",
-      "Banahao",
-      "Baogo",
-      "Bugang",
-      "Cagawasan",
-      "Cagayan",
-      "Cambitoon",
-      "Canlinte",
-      "Cawayan",
-      "Cogon",
-      "Cuaming",
-      "Dagnawan",
-      "Dagohoy",
-      "Dait Sur",
-      "Datag",
-      "Fatima",
-      "Hambongan",
-      "Ilaud",
-      "Ilaya",
-      "Ilihan",
-      "Lapacan Norte",
-      "Lapacan Sur",
-      "Lawis",
-      "Liloan Norte",
-      "Liloan Sur",
-      "Lomboy",
-      "Lonoy Cainsican",
-      "Lonoy Roma",
-      "Lutao",
-      "Luyo",
-      "Mabuhay",
-      "Maria Rosario",
-      "Nabuad",
-      "Napo",
-      "Ondol",
-      "Poblacion",
-      "Riverside",
-      "Saa",
-      "San Isidro",
-      "San Jose",
-      "Santo Niño",
-      "Santo Rosario",
-      "Sua",
-      "Tambook",
-      "Tungod",
-      "U-og",
-      "Ubujan",
+      "Anonang", "Bahan", "Badiang", "Baguhan", "Banahao", "Baogo", "Bugang",
+      "Cagawasan", "Cagayan", "Cambitoon", "Canlinte", "Cawayan", "Cogon",
+      "Cuaming", "Dagnawan", "Dagohoy", "Dait Sur", "Datag", "Fatima",
+      "Hambongan", "Ilaud", "Ilaya", "Ilihan", "Lapacan Norte", "Lapacan Sur",
+      "Lawis", "Liloan Norte", "Liloan Sur", "Lomboy", "Lonoy Cainsican",
+      "Lonoy Roma", "Lutao", "Luyo", "Mabuhay", "Maria Rosario", "Nabuad",
+      "Napo", "Ondol", "Poblacion", "Riverside", "Saa", "San Isidro",
+      "San Jose", "Santo Niño", "Santo Rosario", "Sua", "Tambook", "Tungod",
+      "U-og", "Ubujan"
     ],
     Clarin: [
-      "Bacani",
-      "Bogtongbod",
-      "Bonbon",
-      "Bontud",
-      "Buacao",
-      "Buangan",
-      "Cabog",
-      "Caboy",
-      "Caluwasan",
-      "Candajec",
-      "Cantoyoc",
-      "Comaang",
-      "Danahao",
-      "Katipunan",
-      "Lajog",
-      "Mataub",
-      "Nahawan",
-      "Poblacion Centro",
-      "Poblacion Norte",
-      "Poblacion Sur",
-      "Tangaran",
-      "Tontunan",
-      "Tubod",
-      "Villaflor",
+      "Bacani", "Bogtongbod", "Bonbon", "Bontud", "Buacao", "Buangan", "Cabog",
+      "Caboy", "Caluwasan", "Candajec", "Cantoyoc", "Comaang", "Danahao",
+      "Katipunan", "Lajog", "Mataub", "Nahawan", "Poblacion Centro",
+      "Poblacion Norte", "Poblacion Sur", "Tangaran", "Tontunan", "Tubod",
+      "Villaflor"
     ],
-    'San Isidro': [
-      "Abehilan",
-      "Baryong Daan",
-      "Baunos",
-      "Cabanugan",
-      "Caimbang",
-      "Cambansag",
-      "Candungao",
-      "Cansague Norte",
-      "Cansague Sur",
-      "Causwagan Sur",
-      "Masonoy",
-      "Poblacion"
+    "San Isidro": [
+      "Abehilan", "Baryong Daan", "Baunos", "Cabanugan", "Caimbang", "Cambansag",
+      "Candungao", "Cansague Norte", "Cansague Sur", "Causwagan Sur",
+      "Masonoy", "Poblacion"
     ],
     Tubigon: [
-      "Bagongbanwa",
-      "Banlasan",
-      "Batasan",
-      "Bilangbilangan",
-      "Bosongon",
-      "Buenos Aires",
-      "Bunacan",
-      "Cabulihan",
-      "Cahayag",
-      "Cawayanan",
-      "Centro",
-      "Genonocan",
-      "Guiwanon",
-      "Ilihan Norte",
-      "Ilihan Sur",
-      "Libertad",
-      "Macaas",
-      "Matabao",
-      "Mocaboc Island",
-      "Panadtaran",
-      "Panaytayon",
-      "Pandan",
-      "Pangapasan",
-      "Pinayagan Norte",
-      "Pinayagan Sur",
-      "Pooc Occidental",
-      "Pooc Oriental",
-      "Potohan",
-      "Talenceras",
-      "Tan-awan",
-      "Tinangnan",
-      "Ubay Island",
-      "Ubojan",
+      "Bagongbanwa", "Banlasan", "Batasan", "Bilangbilangan", "Bosongon",
+      "Buenos Aires", "Bunacan", "Cabulihan", "Cahayag", "Cawayanan",
+      "Centro", "Genonocan", "Guiwanon", "Ilihan Norte", "Ilihan Sur",
+      "Libertad", "Macaas", "Matabao", "Mocaboc Island", "Panadtaran",
+      "Panaytayon", "Pandan", "Pangapasan", "Pinayagan Norte",
+      "Pinayagan Sur", "Pooc Occidental", "Pooc Oriental", "Potohan",
+      "Talenceras", "Tan-awan", "Tinangnan", "Ubay Island", "Ubojan",
       "Villanueva"
     ],
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-
-    if (name === "municipality") {
-      setFormData((prev) => ({ ...prev, barangay: "" }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+      barangay: name === "municipality" && !municipalityData[value]?.includes(prev.barangay) ? "" : prev.barangay,
+    }));
   };
 
   const handleSymptomChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      symptoms: { ...formData.symptoms, [name]: value },
+      symptoms: { ...formData.symptoms, [name]: value === "yes" ? 1 : 0 },
     });
   };
 
@@ -207,45 +111,35 @@ const Predict = () => {
     setLoading(true);
 
     try {
-      const symptomData = { ...formData.symptoms };
       const data = {
-        age: formData.age,
+        age: Number(formData.age),
         gender: formData.gender,
         municipality: formData.municipality,
         barangay: formData.barangay,
-        year: formData.year,
-        ...Object.keys(symptomData).reduce((acc, symptom) => {
-          acc[symptom] = symptomData[symptom] === "yes" ? 1 : 0;
-          return acc;
-        }, {}),
+        year: Number(formData.year),
+        ...formData.symptoms,
       };
 
-      console.log('Sending prediction request to:', "https://dengue-1.onrender.com/predict");
-      const response = await axios.post("https://dengue-1.onrender.com/predict", data, {
-        withCredentials: true, // Include credentials (if needed)
-      });
-      const { prediction } = response.data;
+      console.log("Sending prediction request:", data);
 
-      console.log('Saving prediction result:', { ...data, prediction });
-      await axios.post("https://dengue-1.onrender.com/result", { ...data, prediction }, {
-        withCredentials: true, // Include credentials (if needed)
-      });
-      console.log("Prediction saved successfully");
+      const response = await axios.post("https://dengue-1.onrender.com/predict", data);
+      const { prediction_probability } = response.data;
 
+      console.log("Saving prediction result:", { ...data, prediction_probability });
+
+      await axios.post("https://dengue-1.onrender.com/result", { ...data, prediction_probability });
+
+      console.log("Prediction saved successfully!");
       setLoading(false);
-      navigate("/result", { state: { prediction } });
+      navigate("/result", { state: { prediction_probability } });
     } catch (error) {
       setLoading(false);
-
       if (error.response) {
         console.error("Prediction error:", error.response.data);
-        alert(`Error: ${error.response.data.error || "Unable to make a prediction. Please try again."}`);
-      } else if (error.request) {
-        console.error("Prediction error: No response from server", error.request);
-        alert("Error: No response from server. Check your connection.");
+        alert(error.response.data.error || "Error making a prediction.");
       } else {
         console.error("Prediction error:", error.message);
-        alert("Error: Something went wrong. Please try again.");
+        alert("Something went wrong. Please try again.");
       }
     }
   };
