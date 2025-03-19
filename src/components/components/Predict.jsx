@@ -220,14 +220,14 @@ const Predict = () => {
         }, {}),
       };
 
-      console.log('Sending prediction request to:', "https://dengue-production.up.railway.app/predict");
-      const response = await axios.post("https://dengue-production.up.railway.app/predict", data, {
+      console.log('Sending prediction request to:', "https://dengue-1.onrender.com/predict");
+      const response = await axios.post("https://dengue-1.onrender.com/predict", data, {
         withCredentials: true, // Include credentials (if needed)
       });
       const { prediction } = response.data;
 
       console.log('Saving prediction result:', { ...data, prediction });
-      await axios.post("https://dengue-production.up.railway.app/result", { ...data, prediction }, {
+      await axios.post("https://dengue-1.onrender.com/result", { ...data, prediction }, {
         withCredentials: true, // Include credentials (if needed)
       });
       console.log("Prediction saved successfully");
