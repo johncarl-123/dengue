@@ -6,6 +6,9 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import morgan from 'morgan';
 
 dotenv.config();
 
@@ -13,32 +16,31 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000; // ✅ Ensure PORT is correctly set
+const PORT = process.env.PORT || 3000;
 const MODEL_PATH = process.env.MODEL_PATH || 'svm_model4.pkl';
 
-// 🔹 Validate Environment Variables
-if (!process.env.MODEL_PATH) {
-    console.error('❌ MODEL_PATH environment variable is not set.');
+// Validate Environment Variables
+if (!process.env.MODEL_PATH || !process.env.FIREBASE_CONFIG) {
+    console.error('❌ Required environment variables are missing.');
     process.exit(1);
 }
 
-// 🔹 CORS Middleware (Allow frontend requests)
+// Middleware
 app.use(cors({
-    origin: 'https://dengue-project.vercel.app',
+    origin: ['https://dengue-project.vercel.app', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
 }));
-
 app.use(bodyParser.json());
+app.use(helmet());
+app.use(morgan('combined'));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
-// 🔹 Initialize Firebase
+// Initialize Firebase
 async function initializeFirebase() {
     try {
-        const firebaseConfig = process.env.FIREBASE_CONFIG;
-        if (!firebaseConfig) throw new Error('❌ FIREBASE_CONFIG is missing.');
-
-        const serviceAccount = JSON.parse(firebaseConfig);
+        const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
 
         if (!admin.apps.length) {
             admin.initializeApp({
@@ -53,7 +55,7 @@ async function initializeFirebase() {
     }
 }
 
-// 🔹 Start Server After Firebase Initializes
+// Start Server
 initializeFirebase().then(() => {
     const db = admin.firestore();
 
@@ -61,11 +63,8 @@ initializeFirebase().then(() => {
         res.send('Welcome to the Dengue Prediction API.');
     });
 
-    // 🔹 Predict Endpoint
     app.post('/predict', async (req, res) => {
         try {
-            console.log('📥 Incoming request:', JSON.stringify(req.body, null, 2));
-
             const requiredFields = ['age', 'gender', 'municipality', 'year', 'barangay'];
             for (const field of requiredFields) {
                 if (!req.body[field]) {
@@ -81,8 +80,16 @@ initializeFirebase().then(() => {
                 noseBleed = 0, wateryStool = 0, preOrbitalPain = 0, bodyMalaise = 0,
             } = req.body;
 
+            if (isNaN(age) || age < 0 || age > 120) {
+                return res.status(400).json({ error: 'Invalid age. Age must be between 0 and 120.' });
+            }
+
+            if (!['male', 'female'].includes(gender.toLowerCase())) {
+                return res.status(400).json({ error: 'Invalid gender. Must be "male" or "female".' });
+            }
+
             if (!/^\d{4}$/.test(year)) {
-                console.warn("⚠️ Invalid year format. Setting year to 'unknown'.");
+                return res.status(400).json({ error: 'Invalid year format. Year must be a 4-digit number.' });
             }
 
             const pythonArgs = [
@@ -92,27 +99,24 @@ initializeFirebase().then(() => {
                 nausea, backPain, jointPain, noseBleed, wateryStool, preOrbitalPain, bodyMalaise
             ].map(String);
 
-            console.log("🔄 Running Python script with args:", pythonArgs);
-
             const options = {
                 mode: 'text',
                 pythonOptions: ['-u'],
                 scriptPath: __dirname,
                 args: pythonArgs,
-                timeout: 10000, // 10 seconds timeout
+                timeout: 10000,
             };
 
             const results = await new Promise((resolve, reject) => {
                 PythonShell.run('predict_model.py', options, (err, result) => {
                     if (err) {
                         console.error("🚨 Python script error:", err.message);
+                        console.error("🚨 Python script stderr:", err.stderr);
                         return reject(err);
                     }
                     resolve(result);
                 });
             });
-
-            console.log("📜 Raw Python Output:", results);
 
             let prediction = null;
             if (results && results.length > 0) {
@@ -123,21 +127,35 @@ initializeFirebase().then(() => {
                 }
             }
 
-            console.log("🔮 Prediction probability:", prediction);
-
             if (prediction !== null && prediction > 0.5) {
                 const predictionData = {
-                    age, gender: gender.toLowerCase() === 'male' ? 1 : 0,
-                    municipality: municipality.toLowerCase(), year, barangay: barangay.toLowerCase(),
-                    fever, allergy, colds, chestPain, suka, headache, cough, stomachache,
-                    soreThroat, nausea, backPain, jointPain, noseBleed, wateryStool,
-                    preOrbitalPain, bodyMalaise, target: prediction,
+                    age,
+                    gender: gender.toLowerCase() === 'male' ? 1 : 0,
+                    municipality: municipality.toLowerCase(),
+                    year,
+                    barangay: barangay.toLowerCase(),
+                    fever,
+                    allergy,
+                    colds,
+                    chestPain,
+                    suka,
+                    headache,
+                    cough,
+                    stomachache,
+                    soreThroat,
+                    nausea,
+                    backPain,
+                    jointPain,
+                    noseBleed,
+                    wateryStool,
+                    preOrbitalPain,
+                    bodyMalaise,
+                    target: prediction,
+                    timestamp: admin.firestore.FieldValue.serverTimestamp(),
                 };
 
                 const docRef = await db.collection('predict').add(predictionData);
                 console.log(`✅ Positive case added to Firestore (ID: ${docRef.id}).`);
-            } else {
-                console.log("ℹ️ Prediction below threshold. Not saving.");
             }
 
             res.json({ prediction: prediction !== null ? `${(prediction * 100).toFixed(2)}%` : 'N/A' });
@@ -147,10 +165,20 @@ initializeFirebase().then(() => {
         }
     });
 
-    // 🔹 Heatmap Data Endpoint
     app.get('/heatmap-data', async (req, res) => {
         try {
-            const snapshot = await db.collection('predict').where('target', '>', 0.5).get();
+            const { year, municipality } = req.query;
+            let query = db.collection('predict').where('target', '>', 0.5);
+
+            if (year) {
+                query = query.where('year', '==', year);
+            }
+
+            if (municipality) {
+                query = query.where('municipality', '==', municipality.toLowerCase());
+            }
+
+            const snapshot = await query.get();
             const data = snapshot.docs.map(doc => doc.data());
 
             const heatmapData = data.reduce((acc, entry) => {
@@ -166,11 +194,14 @@ initializeFirebase().then(() => {
         }
     });
 
-    // 🔹 Start Server
+    app.use((err, req, res, next) => {
+        console.error("🚨 Global error handler:", err.message);
+        res.status(500).json({ error: "Internal Server Error" });
+    });
+
     app.listen(PORT, () => {
         console.log(`🚀 Server is running on port ${PORT}`);
     });
-
 }).catch(err => {
     console.error('❌ Error initializing Firebase:', err.message);
 });
