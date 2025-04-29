@@ -4,13 +4,22 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "echo 'No build step needed for backend'"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^7.11.0",
+    "@react-google-maps/api": "^2.20.6",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
-    "express": "^4.21.1",
-    "mysql2": "^2.3.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "firebase": "^11.3.1",
+    "firebase-admin": "^13.1.0",
     "python-shell": "^3.0.1"
-  }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }

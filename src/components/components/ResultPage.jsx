@@ -101,8 +101,8 @@ const ResultPage = () => {
       "The likelihood of dengue is low. Maintain good health practices and monitor for any changes, but there is no immediate cause for concern.";
     recommendationsPool = [
       "Continue to use mosquito repellents and keep your environment clean to prevent mosquito breeding.",
-      "Maintain a balanced diet to support your immune system.",
-      "Stay hydrated and get adequate rest to maintain overall health.",
+      "For your home, make sure all windows have screens and fix it if there are holes. Installing window screens is a simple and effective way to keep mosquitoes out of your living spaces.",
+      "Always wear mosquito repellents, long-sleeved shirts, pants, or garments that could cover your skin.",
       "If symptoms like fever or joint pain develop, consult a healthcare provider for further evaluation.",
     ];
   }

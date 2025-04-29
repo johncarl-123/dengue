@@ -11,12 +11,14 @@
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
+    "@react-google-maps/api": "^2.20.6",
     "@react-three/drei": "^9.114.6",
     "@react-three/fiber": "^8.17.10",
     "axios": "^1.7.7",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "express": "^4.21.1",
+    "firebase": "^11.3.1",
     "framer-motion": "^11.11.9",
     "leaflet": "^1.9.4",
     "maath": "^0.10.8",
@@ -35,7 +37,7 @@
     "@eslint/js": "^9.13.0",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.3",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.13.0",
     "eslint-plugin-react": "^7.37.1",
@@ -44,7 +46,7 @@
     "globals": "^15.11.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
-    "vite": "^5.4.9"
+    "vite": "^5.4.14"
   },
   "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
   "main": "eslint.config.js",
